@@ -20,6 +20,7 @@ def uncertainty_quantification(seed, features, target, prams, mode, algo, dir):
     
     if algo == "DF":
         predictions , t_unc, e_unc, a_unc, model = df.DF_run(x_train, x_test, y_train, y_test, prams, unc_method, seed)
+        probs = model.predict_proba(x_test)
     # elif algo == "eRF":
     #     predictions , t_unc, e_unc, a_unc, model = erf.eRF_run(x_train, x_test, y_train, y_test, prams, unc_method, seed)
     # elif algo == "Tree":
@@ -35,6 +36,7 @@ def uncertainty_quantification(seed, features, target, prams, mode, algo, dir):
     # print(f"run {seed} score: train {model.score(x_train, y_train):0.2f} | test {model.score(x_test, y_test):0.2f}")
 
     # check for directories
+    prob_dir = f"{dir}/prob"
     p_dir = f"{dir}/p"
     t_dir = f"{dir}/t"
     e_dir = f"{dir}/e"
@@ -42,6 +44,7 @@ def uncertainty_quantification(seed, features, target, prams, mode, algo, dir):
     l_dir = f"{dir}/l"
     
     if not os.path.exists(p_dir):
+        os.makedirs(prob_dir)
         os.makedirs(p_dir)
         os.makedirs(t_dir)
         os.makedirs(e_dir)
@@ -49,6 +52,7 @@ def uncertainty_quantification(seed, features, target, prams, mode, algo, dir):
         os.makedirs(l_dir)
 
     # save the results
+    np.savetxt(f"{prob_dir}/{seed}.txt", probs)
     np.savetxt(f"{p_dir}/{seed}.txt", predictions.astype(int))
     np.savetxt(f"{t_dir}/{seed}.txt", t_unc)
     np.savetxt(f"{e_dir}/{seed}.txt", e_unc)
