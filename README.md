@@ -1,1 +1,1 @@
-# Ensemble-based Uncertainty Quantification: Bayesian versus Credal Inference
+# CREDAL UNCERTAINTY REPRESENTATION IN MACHINE LEARNING: AN EMPIRICAL COMPARISON
