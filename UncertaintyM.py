@@ -13,6 +13,7 @@ from collections import Counter
 from scipy.optimize import minimize_scalar
 from scipy.optimize import linprog
 from scipy.stats import entropy
+from scipy import stats
 import warnings
 random.seed(1)
 
@@ -1298,7 +1299,7 @@ def linh_fast(pos,neg):
 
 #################################################################################################################################################
 
-def accuracy_rejection2(predictions_list, labels_list, uncertainty_list, unc_value=False, log=False): # more accurate for calculating area under the curve
+def accuracy_rejection2(predictions_list, labels_list, uncertainty_list, log=False): # more accurate for calculating area under the curve
 	accuracy_list = [] # list containing all the acc lists of all runs
 	reject_list = []
 
@@ -1341,7 +1342,7 @@ def accuracy_rejection2(predictions_list, labels_list, uncertainty_list, unc_val
 		steps = np.nanmean(reject_list, axis=0)
 		std_error = np.std(accuracy_list, axis=0) / math.sqrt(len(uncertainty_list))
 
-	return avg_accuracy, avg_accuracy - std_error, avg_accuracy + std_error, 9999 , steps
+	return avg_accuracy, avg_accuracy - std_error, avg_accuracy + std_error, 9999 , steps*100
 
 def accuracy_rejection(predictions_list, labels_list, uncertainty_list, unc_value=False, log=False): # 2D inputs for average plot -> D1: runs D2: uncertainty data
 
@@ -1429,8 +1430,6 @@ def accuracy_rejection(predictions_list, labels_list, uncertainty_list, unc_valu
 
 def roc(probs_list, predictions_list, labels_list, uncertainty_list, unc_value=False, log=False): # 2D inputs for average plot -> D1: runs D2: uncertainty data
 
-	# fpr_list = []
-	# tpr_list = []
 	area_list = []
 	accuracy_list = []
 	
@@ -1446,55 +1445,18 @@ def roc(probs_list, predictions_list, labels_list, uncertainty_list, unc_value=F
 		uncertainty = np.array(uncertainty)
 		labels = np.array(labels)
 
-		# correctness_map = []
-		# for x, y in zip(predictions, labels):
-		# 	if x == y:
-		# 		correctness_map.append(1)
-		# 	else:
-		# 		correctness_map.append(0)
-		# print(correctness_map)
-		# class_count = Counter(correctness_map)
-		
-		# fpr, tpr, thresholds = metrics.roc_curve(labels, probs[:,1])
 		fpr, tpr, thresholds = metrics.roc_curve(labels, uncertainty)
-
-		# print("------------------------------------")
-		# print(len(class_count.values()))# y_true must be your labels
-		# print("------------------------------------")
-		# exit()
-		# if len(class_count.values()) > 1:
-		# 	fpr, tpr, thresholds = metrics.roc_curve(correctness_map, uncertainty)
 
 		area = metrics.auc(tpr, fpr)
 		area_list.append(area)
 
-		# print(">>> ", fpr.shape)
-		# print(">>> ", tpr.shape)
-		# fpr_list.append(fpr)
-		# tpr_list.append(tpr)
-		# print(fpr)
-		# print(area)
-
-
 	area_list = np.array(area_list)
 	avg_area = area_list.mean()
-	# fpr_list = np.array(fpr_list)
-	# tpr_list = np.array(tpr_list)
-	# fpr_mrun = np.mean(fpr_list, axis=1)
-	# tpr_mrun = np.mean(tpr_list, axis=1)
 
 	return avg_area
 
-
-def uncertainty_correlation(predictions_list, labels_list, uncertainty_list, unc_value=False, log=False): # 2D inputs for average plot -> D1: runs D2: uncertainty data
-
-	accuracy_list = []
-	r_accuracy_list = []
-	
-	steps = np.array(list(range(90)))
-	if unc_value:
-		steps = uncertainty_list
-
+def uncertainty_correlation(predictions_list, labels_list, uncertainty_list, log=False): # more accurate for calculating area under the curve
+	corr_list = [] # list containing all the acc lists of all runs
 
 	for predictions, uncertainty, labels in zip(predictions_list, uncertainty_list, labels_list):
 
@@ -1504,68 +1466,23 @@ def uncertainty_correlation(predictions_list, labels_list, uncertainty_list, unc
 		correctness_map = []
 		for x, y in zip(predictions, labels):
 			if x == y:
-				correctness_map.append(1)
+				correctness_map.append(0) # switching the correctness labels just to get positive corr values
 			else:
-				correctness_map.append(0)
-
-		# uncertainty, correctness_map = zip(*sorted(zip(uncertainty,correctness_map),reverse=False))
+				correctness_map.append(1)
 
 		correctness_map = np.array(correctness_map)
-		sorted_index = np.argsort(uncertainty, kind='stable')
+		sorted_index = np.argsort(-uncertainty, kind='stable')
 		uncertainty = uncertainty[sorted_index]
 		correctness_map = correctness_map[sorted_index]
+		count = np.unique(correctness_map)
+		if len(count) == 1:
+			continue
+		corr = stats.pearsonr(uncertainty, correctness_map)
+		if log:
+			print(f"correctness_map \n{correctness_map.shape} uncertainty \n{uncertainty.shape} \ncorr {corr}")
+		corr_list.append(corr)
 
-		correctness_map = list(correctness_map)
-		uncertainty = list(uncertainty)
-		data_len = len(correctness_map)
-		accuracy = []
+	corr_list = np.array(corr_list)
+	avg_corr = np.nanmean(corr_list, axis=0)
+	return avg_corr
 
-		for step_index, x in enumerate(steps):
-			if unc_value:
-				rejection_index = step_index
-			else:
-				rejection_index = int(data_len *(len(steps) - x) / len(steps))
-			x_correct = correctness_map[:rejection_index].copy()
-			x_unc = uncertainty[:rejection_index].copy()
-			if log:
-				print(f"----------------------------------------------- rejection_index {rejection_index}")
-				for c,u in zip(x_correct, x_unc):
-					print(f"correctness_map {c} uncertainty {u}")
-				# print(f"rejection_index = {rejection_index}\nx_correct {x_correct} \nunc {x_unc}")
-			if rejection_index == 0:
-				accuracy.append(np.nan) # random.random()
-			else:
-				accuracy.append(np.sum(x_correct) / rejection_index)
-		accuracy_list.append(accuracy)
-
-		# random test plot
-		r_accuracy = []
-		
-		for step_index, x in enumerate(steps):
-			random.shuffle(correctness_map)
-			if unc_value:
-				r_rejection_index = step_index
-			else:
-				r_rejection_index = int(data_len *(len(steps) - x) / len(steps))
-
-			r_x_correct = correctness_map[:r_rejection_index].copy()
-			if r_rejection_index == 0:
-				r_accuracy.append(np.nan)
-			else:
-				r_accuracy.append(np.sum(r_x_correct) / r_rejection_index)
-
-		r_accuracy_list.append(r_accuracy)
-
-	accuracy_list = np.array(accuracy_list)
-	r_accuracy_list = np.array(r_accuracy_list)
-		
-	# print(accuracy_list)
-	with warnings.catch_warnings():
-		warnings.simplefilter("ignore", category=RuntimeWarning)
-
-		avg_accuracy = np.nanmean(accuracy_list, axis=0)
-		avg_r_accuracy = np.nanmean(r_accuracy_list, axis=0)
-		std_error = np.std(accuracy_list, axis=0) / math.sqrt(len(uncertainty_list))
-
-
-	return avg_accuracy, avg_accuracy - std_error, avg_accuracy + std_error, avg_r_accuracy , steps

@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import UncertaintyM as unc
 import warnings
+from sklearn import metrics
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
 pic_dir = f"{base_dir}/pic/unc"
@@ -19,18 +20,18 @@ vertical_plot = False
 single_plot = False
 legend_flag = False
 
-data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod", "bank", "QSAR", "spambase"] 
+# data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod", "bank", "QSAR", "spambase"] 
 # data_list  = ["vertebral","breast", "ionosphere", "blod", "QSAR", "wine_qw"] 
 # data_list = ["climate", "parkinsons", "spambase"]
 # data_list = ["climate", "vertebral"]
-# data_list = ["parkinsons"]
+data_list = ["parkinsons"]
 modes     = "eat"
 
 for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name  = "Credal_paper_first_res"
+    run_name  = "ROC_area"
     plot_name = data + "_Credal"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND (run_name='{run_name}' AND result_type='set18' OR run_name='unc_out2' AND result_type='out')"
     query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
@@ -130,8 +131,8 @@ for data in data_list:
                 run_result = np.loadtxt(dir_l+"/"+f)
                 all_runs_l.append(run_result)
 
-            avg_acc, avg_min, avg_max, avg_random , steps = unc.accuracy_rejection(all_runs_p,all_runs_l,all_runs_unc, unc_value_plot)
-
+            avg_acc, avg_min, avg_max, avg_random , steps = unc.accuracy_rejection2(all_runs_p,all_runs_l,all_runs_unc, unc_value_plot)
+            acc_rej_area = metrics.auc(steps, avg_acc)
             # print(">>>>>>>>", avg_acc)
             linestyle = '-'
             # if "set19" in legend:
@@ -200,7 +201,7 @@ for data in data_list:
                 if mode == "t":
                     if "Levi-GH" in legend:
                         # Exception for AU
-                        axs[1].plot(steps, avg_acc, linestyle='--', color=color, label="AU")
+                        axs[1].plot(steps, avg_acc, linestyle='--', color=color, label="AU" + f"(area {acc_rej_area:.2f})")
                         axs[1].legend()
 
                         plot_legend = "TA"
@@ -210,7 +211,7 @@ for data in data_list:
                 # print(">>>>> ", plot_legend)
 
                 if len(plot_legend)>0:
-                    axs[mode_index].plot(steps, avg_acc, linestyle=linestyle, color=color, label=plot_legend)
+                    axs[mode_index].plot(steps, avg_acc, linestyle=linestyle, color=color, label=plot_legend + f"(area {acc_rej_area:.2f})")
                     axs[mode_index].legend()
             
             if mode == "a":
