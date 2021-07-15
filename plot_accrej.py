@@ -30,11 +30,11 @@ for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name  = "DSpaper2"
-    plot_name = data + "_out3"
+    run_name  = "ROC_area"
+    plot_name = data + "_oldAR"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND (run_name='{run_name}' AND result_type='set18' OR run_name='unc_out2' AND result_type='out')"
-    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}' AND result_type='levi.GH'"
-    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id>=4984 AND id<=4986"
+    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
+    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id>=4984 AND id<=4986"
 
     ########################################################################################################################################################
 
@@ -138,7 +138,7 @@ for data in data_list:
                 run_result = np.loadtxt(dir_l+"/"+f)
                 all_runs_l.append(run_result)
 
-            avg_acc, avg_min, avg_max, avg_random , steps = unc.accuracy_rejection(all_runs_p,all_runs_l,all_runs_unc, unc_value_plot)
+            avg_acc, avg_min, avg_max, avg_random , steps = unc.accuracy_rejection2(all_runs_p,all_runs_l,all_runs_unc, unc_value_plot)
 
             # print(">>>>>>>>", avg_acc)
             linestyle = '-'

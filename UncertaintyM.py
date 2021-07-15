@@ -1298,6 +1298,51 @@ def linh_fast(pos,neg):
 
 #################################################################################################################################################
 
+def accuracy_rejection2(predictions_list, labels_list, uncertainty_list, unc_value=False, log=False): # more accurate for calculating area under the curve
+	accuracy_list = [] # list containing all the acc lists of all runs
+	reject_list = []
+
+	for predictions, uncertainty, labels in zip(predictions_list, uncertainty_list, labels_list):
+
+		predictions = np.array(predictions)
+		uncertainty = np.array(uncertainty)
+
+		correctness_map = []
+		for x, y in zip(predictions, labels):
+			if x == y:
+				correctness_map.append(1)
+			else:
+				correctness_map.append(0)
+
+		correctness_map = np.array(correctness_map)
+		sorted_index = np.argsort(-uncertainty, kind='stable')
+		uncertainty = uncertainty[sorted_index]
+		correctness_map = correctness_map[sorted_index]
+
+		accuracy = [] # list of all acc for a single run
+		rejection = []
+		for i in range(len(uncertainty)):
+			t_correctness = correctness_map[i:]
+			rej = (len(uncertainty) - len(t_correctness)) / len(uncertainty)
+			acc = t_correctness.sum() / len(t_correctness)
+
+			accuracy.append(acc)
+			rejection.append(rej)
+		accuracy_list.append(accuracy)
+		reject_list.append(rejection)
+
+	accuracy_list = np.array(accuracy_list)
+	reject_list = np.array(reject_list)
+		
+	with warnings.catch_warnings():
+		warnings.simplefilter("ignore", category=RuntimeWarning)
+
+		avg_accuracy = np.nanmean(accuracy_list, axis=0)
+		steps = np.nanmean(reject_list, axis=0)
+		std_error = np.std(accuracy_list, axis=0) / math.sqrt(len(uncertainty_list))
+
+	return avg_accuracy, avg_accuracy - std_error, avg_accuracy + std_error, 9999 , steps
+
 def accuracy_rejection(predictions_list, labels_list, uncertainty_list, unc_value=False, log=False): # 2D inputs for average plot -> D1: runs D2: uncertainty data
 
 	accuracy_list = []
