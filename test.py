@@ -1,7 +1,7 @@
+import numpy as np
 
+x = np.arange(9.0)
 
+y = np.split(x, 3)
 
-legend = "Levi-Ent"
-
-if legend == "Levi-Ent":
-    print("Fuck you")
+print(y)

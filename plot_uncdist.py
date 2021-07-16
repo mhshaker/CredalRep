@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import UncertaintyM as unc
 import warnings
+from sklearn import metrics
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
 pic_dir = f"{base_dir}/pic/unc"
@@ -19,16 +20,22 @@ vertical_plot = False
 single_plot = False
 legend_flag = False
 
-data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod", "bank", "QSAR", "spambase", "iris", "heartdisease"] 
+# data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod", "bank", "QSAR", "spambase"] 
+# data_list  = ["vertebral","breast", "ionosphere", "blod", "QSAR", "wine_qw"] 
+# data_list = ["climate", "parkinsons", "spambase"]
+# data_list = ["climate", "vertebral"]
+data_list = ["parkinsons"]
 modes     = "eat"
 
 for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name  = "DSpaper2"
-    plot_name = "/DSpaper/" + data + ""
-    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}' AND status='done'"
+    run_name  = "ROC_area"
+    plot_name = data + "_Credal"
+    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND (run_name='{run_name}' AND result_type='set18' OR run_name='unc_out2' AND result_type='out')"
+    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
+    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id>=4984 AND id<=4986"
 
     ########################################################################################################################################################
 
@@ -63,6 +70,9 @@ for data in data_list:
             fig.set_figwidth(15)
     legend_list = []
     
+
+
+
     # get input from command line
     mydb = db.connect(host="131.234.250.119", user="root", passwd="uncertainty", database="uncertainty")
     mycursor = mydb.cursor()
@@ -95,14 +105,6 @@ for data in data_list:
 
             legend = ""
 
-            # prams = str(job[2])
-            # pram_name = "n_estimators"
-            # search_pram = f"'{pram_name}': "
-            # v_index_s = prams.index(search_pram)
-            # v_index_e = prams.index(",", v_index_s)
-            # max_depth = int(prams[v_index_s+len(search_pram) : v_index_e])
-            # legend += "n_estimators: " + str(max_depth)
-
             for text in job[3:]:
                 legend += " " +str(text) 
             # legend += mode   
@@ -129,14 +131,17 @@ for data in data_list:
                 run_result = np.loadtxt(dir_l+"/"+f)
                 all_runs_l.append(run_result)
 
-            avg_acc, avg_min, avg_max, avg_random , steps = unc.accuracy_rejection(all_runs_p,all_runs_l,all_runs_unc, unc_value_plot)
+            avg_dist = unc.uncertainty_distribution(all_runs_p,all_runs_l,all_runs_unc, unc_value_plot)
+            print(avg_dist)
+            exit()
 
-            # print(">>>>>>>>", avg_acc)
             linestyle = '-'
-            if "set19" in legend:
+            # if "set19" in legend:
+            #     linestyle = ':'
+            # if "set18" in legend:
+            #     linestyle = ':'
+            if "out" in legend:
                 linestyle = '--'
-            if "conv" in legend:
-                linestyle = ':'
 
             if color_correct:
                 color = "black"
@@ -164,21 +169,14 @@ for data in data_list:
                     color = "blue"
                 if "set19" in legend:
                     color = "red"
+                if "out.tree" in legend:
+                    color = "yellow"
             else:
                 color = None
 
-            legend = legend.replace("levi.GH.conv", "Levi-GH-conv")
-            legend = legend.replace("levi.ent.conv", "Levi-Ent-conv")
-            legend = legend.replace("levi.GH", "Levi-GH")
-            legend = legend.replace("levi.ent", "Levi-Ent")
-            legend = legend.replace("levi3.GH", "Levi-GH-MANY")
-            legend = legend.replace("levi3.ent", "Levi-Ent-MANY")
-            legend = legend.replace("bays", "Bayes")
-            legend = legend.replace("set14", "Levi-GH-boot")
-            legend = legend.replace("set15", "Levi-Ent-boot")
             legend = legend.replace("set18", "Levi-GH")
             legend = legend.replace("set19", "Levi-Ent")
-            legend = legend.replace("gs", "GS")
+            legend = legend.replace("out", "Outcome")
 
 
 
@@ -187,8 +185,35 @@ for data in data_list:
             if single_plot:
                 axs.plot(steps, avg_acc, linestyle=linestyle, color=color)
             else:
-                axs[mode_index].plot(steps, avg_acc, linestyle=linestyle, color=color)
-                # axs[mode_index].grid(which='minor') # to show grids in the plot
+                plot_legend = ""
+                if mode == "a":
+                    if "Levi-Ent" in legend:
+                        plot_legend = "AL"
+                    if "Levi-GH" in legend:
+                        plot_legend = "AD"
+                    if "Outcome" in legend:
+                        plot_legend = "AO"
+                    # make the exception for AU in mode==t
+                if mode == "e":
+                    if "Levi-GH" in legend:
+                        plot_legend = "EM"
+                    if "Levi-Ent" in legend:
+                        plot_legend = "EU"
+                if mode == "t":
+                    if "Levi-GH" in legend:
+                        # Exception for AU
+                        axs[1].plot(steps, avg_acc, linestyle='--', color=color, label="AU" + f"(area {acc_rej_area:.2f})")
+                        axs[1].legend()
+
+                        plot_legend = "TA"
+                        
+                    if "Outcome" in legend:
+                        plot_legend = "TO"
+                # print(">>>>> ", plot_legend)
+
+                if len(plot_legend)>0:
+                    axs[mode_index].plot(steps, avg_acc, linestyle=linestyle, color=color, label=plot_legend + f"(area {acc_rej_area:.2f})")
+                    axs[mode_index].legend()
             
             if mode == "a":
                 mode_title = "AU"
@@ -227,10 +252,6 @@ for data in data_list:
                 else:
                     # ax.set(xlabel=xlabel)
                     pass
-    # title = plot_list
-    # fig.suptitle(data)
-    # with warnings.catch_warnings():
-    #     warnings.simplefilter("ignore", category=RuntimeWarning)
     if legend_flag:
         fig.legend(axs,labels=legend_list, loc="lower center", ncol=6)
 

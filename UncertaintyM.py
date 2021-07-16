@@ -1486,3 +1486,44 @@ def uncertainty_correlation(predictions_list, labels_list, uncertainty_list, log
 	avg_corr = np.nanmean(corr_list, axis=0)
 	return avg_corr
 
+def uncertainty_distribution(predictions_list, labels_list, uncertainty_list, log=False): # more accurate for calculating area under the curve
+	corr_list = [] # list containing all the acc lists of all runs
+
+	for predictions, uncertainty, labels in zip(predictions_list, uncertainty_list, labels_list):
+
+		predictions = np.array(predictions)
+		uncertainty = np.array(uncertainty)
+
+		correctness_map = []
+		for x, y in zip(predictions, labels):
+			if x == y:
+				correctness_map.append(0) # switching the correctness labels just to get positive corr values
+			else:
+				correctness_map.append(1)
+		
+		# sort based on correctness_map
+
+		correctness_map = np.array(correctness_map)
+		sorted_index = np.argsort(-correctness_map, kind='stable')
+		uncertainty = uncertainty[sorted_index]
+		correctness_map = correctness_map[sorted_index]
+		count = np.unique(correctness_map)
+
+		# split correct from incorrect
+		split_index = 0 # code to find where to split the correctness array
+		for i, v in enumerate(correctness_map):
+			if v != 1:
+				split_index = i
+				break
+		corrects      = correctness_map[:split_index]
+		unc_correct   = uncertainty[:split_index]
+		incorrects    = correctness_map[split_index:]
+		unc_incorrect = uncertainty[split_index:]
+
+		# histogram with 10 bins
+		n, bins, patches = plt.hist(unc_incorrect, bins=10) # equal distance bins
+		n, bins, patches = plt.hist(unc_correct, bins=10) # equal distance bins
+		plt.savefig(f"./pic/unc/Hist.png",bbox_inches='tight')
+		exit()
+
+	return 0
