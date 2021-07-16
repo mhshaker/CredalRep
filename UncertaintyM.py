@@ -1488,6 +1488,8 @@ def uncertainty_correlation(predictions_list, labels_list, uncertainty_list, log
 
 def uncertainty_distribution(predictions_list, labels_list, uncertainty_list, log=False): # more accurate for calculating area under the curve
 	corr_list = [] # list containing all the acc lists of all runs
+	unc_correct_all = np.array([])
+	unc_incorrect_all = np.array([])
 
 	for predictions, uncertainty, labels in zip(predictions_list, uncertainty_list, labels_list):
 
@@ -1497,9 +1499,9 @@ def uncertainty_distribution(predictions_list, labels_list, uncertainty_list, lo
 		correctness_map = []
 		for x, y in zip(predictions, labels):
 			if x == y:
-				correctness_map.append(0) # switching the correctness labels just to get positive corr values
+				correctness_map.append(1) 
 			else:
-				correctness_map.append(1)
+				correctness_map.append(0)
 		
 		# sort based on correctness_map
 
@@ -1519,11 +1521,7 @@ def uncertainty_distribution(predictions_list, labels_list, uncertainty_list, lo
 		unc_correct   = uncertainty[:split_index]
 		incorrects    = correctness_map[split_index:]
 		unc_incorrect = uncertainty[split_index:]
-
-		# histogram with 10 bins
-		n, bins, patches = plt.hist(unc_incorrect, bins=10) # equal distance bins
-		n, bins, patches = plt.hist(unc_correct, bins=10) # equal distance bins
-		plt.savefig(f"./pic/unc/Hist.png",bbox_inches='tight')
-		exit()
-
-	return 0
+		unc_correct_all = np.concatenate((unc_correct_all, unc_correct))
+		unc_incorrect_all = np.concatenate((unc_incorrect_all, unc_incorrect))
+	
+	return unc_correct_all, unc_incorrect_all

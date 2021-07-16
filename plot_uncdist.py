@@ -13,11 +13,8 @@ pic_dir = f"{base_dir}/pic/unc"
 if not os.path.exists(pic_dir):
     os.makedirs(pic_dir)
 
-unc_value_plot = False
 local = False
 color_correct = True
-vertical_plot = False
-single_plot = False
 legend_flag = False
 
 # data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod", "bank", "QSAR", "spambase"] 
@@ -32,7 +29,7 @@ for data in data_list:
     # prameters ############################################################################################################################################
 
     run_name  = "ROC_area"
-    plot_name = data + "_Credal"
+    plot_name = data + "_dist"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND (run_name='{run_name}' AND result_type='set18' OR run_name='unc_out2' AND result_type='out')"
     query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id>=4984 AND id<=4986"
@@ -52,23 +49,9 @@ for data in data_list:
     data = data.replace("iris", "Iris")
     data = data.replace("heartdisease", "Heart Disease")
 
-    xlabel      = "Rejection %"
-    ylabel      = "Accuracy %"
+    xlabel      = "Uncertainty"
+    ylabel      = "Frequency"
 
-    if single_plot:
-        fig, axs = plt.subplots(1,1)
-        fig.set_figheight(5)
-        fig.set_figwidth(5)
-    else:
-        if vertical_plot:
-            fig, axs = plt.subplots(len(modes),1)
-            fig.set_figheight(10)
-            fig.set_figwidth(5)
-        else:
-            fig, axs = plt.subplots(1,len(modes))
-            fig.set_figheight(3)
-            fig.set_figwidth(15)
-    legend_list = []
     
 
 
@@ -82,9 +65,15 @@ for data in data_list:
     for job in results:
         jobs.append(job)
 
+    fig, axs = plt.subplots(len(jobs),len(modes))
+    fig.set_figheight(15)
+    fig.set_figwidth(15)
+    legend_list = []
+
+
     plot_list = []
 
-    for job in jobs:
+    for job_index, job in enumerate(jobs):
         dir = job[0]
         if dir[0] == ".":
             dir = base_dir + dir[1:]
@@ -131,9 +120,7 @@ for data in data_list:
                 run_result = np.loadtxt(dir_l+"/"+f)
                 all_runs_l.append(run_result)
 
-            avg_dist = unc.uncertainty_distribution(all_runs_p,all_runs_l,all_runs_unc, unc_value_plot)
-            print(avg_dist)
-            exit()
+            correct, incorrect = unc.uncertainty_distribution(all_runs_p,all_runs_l,all_runs_unc)
 
             linestyle = '-'
             # if "set19" in legend:
@@ -178,42 +165,39 @@ for data in data_list:
             legend = legend.replace("set19", "Levi-Ent")
             legend = legend.replace("out", "Outcome")
 
+            plot_legend = ""
+            # if mode == "a":
+            #     if "Levi-Ent" in legend:
+            #         plot_legend = "AL"
+            #     if "Levi-GH" in legend:
+            #         plot_legend = "AD"
+            #     if "Outcome" in legend:
+            #         plot_legend = "AO"
+            #     # make the exception for AU in mode==t
+            # if mode == "e":
+            #     if "Levi-GH" in legend:
+            #         plot_legend = "EM"
+            #     if "Levi-Ent" in legend:
+            #         plot_legend = "EU"
+            # if mode == "t":
+            #     if "Levi-GH" in legend:
+            #         # Exception for AU
+            #         # axs[1].plot(steps, avg_acc, linestyle='--', color=color, label="AU" + f"(area {acc_rej_area:.2f})")
+            #         axs[1].legend()
 
+            #         plot_legend = "TA"
+                    
+            #     if "Outcome" in legend:
+            #         plot_legend = "TO"
+            # print(">>>>> ", plot_legend)
 
-            avg_acc = avg_acc * 100 # to have percentates and not decimals
+            # histogram with 10 bins
+            n, bins, patches = axs[job_index][mode_index].hist(correct, bins=10, label="correct") # equal distance bins
+            n, bins, patches = axs[job_index][mode_index].hist(incorrect, bins=10, label="incorrect") # equal distance bins
+            # plt.savefig(f"./pic/unc/Hist.png",bbox_inches='tight')
 
-            if single_plot:
-                axs.plot(steps, avg_acc, linestyle=linestyle, color=color)
-            else:
-                plot_legend = ""
-                if mode == "a":
-                    if "Levi-Ent" in legend:
-                        plot_legend = "AL"
-                    if "Levi-GH" in legend:
-                        plot_legend = "AD"
-                    if "Outcome" in legend:
-                        plot_legend = "AO"
-                    # make the exception for AU in mode==t
-                if mode == "e":
-                    if "Levi-GH" in legend:
-                        plot_legend = "EM"
-                    if "Levi-Ent" in legend:
-                        plot_legend = "EU"
-                if mode == "t":
-                    if "Levi-GH" in legend:
-                        # Exception for AU
-                        axs[1].plot(steps, avg_acc, linestyle='--', color=color, label="AU" + f"(area {acc_rej_area:.2f})")
-                        axs[1].legend()
-
-                        plot_legend = "TA"
-                        
-                    if "Outcome" in legend:
-                        plot_legend = "TO"
-                # print(">>>>> ", plot_legend)
-
-                if len(plot_legend)>0:
-                    axs[mode_index].plot(steps, avg_acc, linestyle=linestyle, color=color, label=plot_legend + f"(area {acc_rej_area:.2f})")
-                    axs[mode_index].legend()
+            # axs[mode_index].plot(steps, avg_acc, linestyle=linestyle, color=color, label=plot_legend + f"(area {acc_rej_area:.2f})")
+            axs[job_index][mode_index].legend()
             
             if mode == "a":
                 mode_title = "AU"
@@ -222,36 +206,26 @@ for data in data_list:
             if mode == "t":
                 mode_title = "TU"
             
-            if single_plot:
-                legend_list.append(legend + " " + mode_title)
-            elif flap:
+            if flap:
                 legend_list.append(legend)
                 
             
-            if single_plot:
-                axs.set_title(data)
-            else:
-                axs[mode_index].set_title(data + " " + mode_title)
+            axs[job_index][mode_index].set_title(data + " " + legend + " " + mode_title)
             flap =False
 
-    if single_plot == False:
-        acc_lable_flag = True
-        job_plots_list = list(axs.flat)
-        if vertical_plot:
-            job_plots_list = reversed(list(axs.flat))
-        for ax in job_plots_list:
-            if acc_lable_flag:
-                # ax.set(xlabel=xlabel, ylabel=ylabel)
-                # ax.set(xlabel=xlabel)
-                ax.set(ylabel=ylabel)
-                acc_lable_flag = False
-            else:
-                if vertical_plot:
-                    ax.set(ylabel=ylabel)
-                    # pass
-                else:
-                    # ax.set(xlabel=xlabel)
-                    pass
+    job_plots_list = list(axs.flat)
+
+    for ax in job_plots_list:
+        ax.set(xlabel=xlabel, ylabel=ylabel)
+    
+    # acc_lable_flag = True
+    # for ax in job_plots_list:
+    #     if acc_lable_flag:
+    #         # ax.set(xlabel=xlabel, ylabel=ylabel)
+    #         # ax.set(xlabel=xlabel)
+    #         ax.set(ylabel=ylabel)
+    #         acc_lable_flag = False
+
     if legend_flag:
         fig.legend(axs,labels=legend_list, loc="lower center", ncol=6)
 

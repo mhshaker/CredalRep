@@ -1,7 +1,6 @@
 import numpy as np
 
-x = np.arange(9.0)
-
-y = np.split(x, 3)
-
-print(y)
+x = np.array([])
+y = np.array([1,2,3])
+c = np.concatenate((x,y))
+print(c)
