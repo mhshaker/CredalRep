@@ -17,11 +17,11 @@ local = False
 color_correct = True
 legend_flag = False
 
-# data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod", "bank", "QSAR", "spambase"] 
+data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod", "bank", "QSAR", "spambase"] 
 # data_list  = ["vertebral","breast", "ionosphere", "blod", "QSAR", "wine_qw"] 
 # data_list = ["climate", "parkinsons", "spambase"]
 # data_list = ["climate", "vertebral"]
-data_list = ["parkinsons"]
+# data_list = ["parkinsons"]
 modes     = "eat"
 
 for data in data_list:
@@ -37,17 +37,17 @@ for data in data_list:
     ########################################################################################################################################################
 
     # fix dataset official name
-    data = data.replace("parkinsons", "Parkinsons")
-    data = data.replace("vertebral", "Vertebral Column")
-    data = data.replace("breast", "Breast Cancer Wisconsin (Diagnostic)")
-    data = data.replace("climate", "Climate Model Simulation Crashes")
-    data = data.replace("ionosphere", "Ionosphere")
-    data = data.replace("blod", "Blood Transfusion Service Center")
-    data = data.replace("bank", "Banknote Authentication")
-    data = data.replace("QSAR", "QSAR biodegradation")
-    data = data.replace("spambase", "Spambase")
-    data = data.replace("iris", "Iris")
-    data = data.replace("heartdisease", "Heart Disease")
+    # data = data.replace("parkinsons", "Parkinsons")
+    # data = data.replace("vertebral", "Vertebral Column")
+    # data = data.replace("breast", "Breast Cancer Wisconsin (Diagnostic)")
+    # data = data.replace("climate", "Climate Model Simulation Crashes")
+    # data = data.replace("ionosphere", "Ionosphere")
+    # data = data.replace("blod", "Blood Transfusion Service Center")
+    # data = data.replace("bank", "Banknote Authentication")
+    # data = data.replace("QSAR", "QSAR biodegradation")
+    # data = data.replace("spambase", "Spambase")
+    # data = data.replace("iris", "Iris")
+    # data = data.replace("heartdisease", "Heart Disease")
 
     xlabel      = "Uncertainty"
     ylabel      = "Frequency"
