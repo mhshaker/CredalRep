@@ -676,7 +676,7 @@ def minent19(probs, likelyhoods, epsilon):
 	return np.array(s_min)
 
 
-def uncertainty_set18(probs, likelyhoods, epsilon=2, log=False):
+def uncertainty_set18(probs, likelyhoods, epsilon=2, log=False): # credal sets based on the idea of chainging the prior from uniform to delda
 	gh = set_gh18(probs, likelyhoods, epsilon)
 	s_max = maxent18(probs, likelyhoods, epsilon)
 
@@ -693,6 +693,12 @@ def uncertainty_set19(probs, likelyhoods, epsilon=2, log=False):
 	e = s_max - s_min
 	a = s_min
 	return total, e, a 
+
+# def uncertainty_set20(probs, likelyhoods, epsilon=2, log=False): # credal set with different hyper prameters
+# 	pass
+
+# def uncertainty_set21(probs, likelyhoods, epsilon=2, log=False):
+# 	pass
 
 
 def uncertainty_setmix(probs, credal_size=30):

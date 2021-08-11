@@ -70,9 +70,9 @@ if __name__ == '__main__':
     job_id = 0 # for developement
     seed   = 1
     runs = 1
-    data_name = "Jdata/parkinsons"
+    data_name = "Jdata/spambase"
     algo = "DF"
-    unc_method = "out"
+    unc_method = "set20"
     prams = {
     # 'criterion'        : "entropy",
     'max_depth'        : 10,
@@ -81,7 +81,7 @@ if __name__ == '__main__':
 
     'epsilon'          : 2,
 
-    # 'credal_size'      : 10,
+    'credal_size'      : 10,
     # 'credal_sample_size' : 5,
     # 'credal_L'           : 3,
 

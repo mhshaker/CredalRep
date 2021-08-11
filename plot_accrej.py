@@ -23,15 +23,15 @@ legend_flag = True
 # data_list  = ["vertebral","breast", "ionosphere", "blod", "QSAR", "wine_qw"] 
 # data_list = ["climate", "parkinsons", "spambase"]
 # data_list = ["climate", "vertebral"]
-data_list = ["parkinsons"]
+data_list = ["spambase"]
 modes     = "eat"
 
 for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name  = "ROC_area"
-    plot_name = data + "_newAR"
+    run_name  = "set20_random_opt3"
+    plot_name = data + "_setRandomOptFull"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND (run_name='{run_name}' AND result_type='set18' OR run_name='unc_out2' AND result_type='out')"
     query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id>=4984 AND id<=4986"
@@ -146,6 +146,8 @@ for data in data_list:
                 linestyle = '--'
             # if "out" in legend:
             #     linestyle = ':'
+            if "bays" in legend:
+                linestyle = ':'
 
             if color_correct:
                 color = "black"
@@ -173,23 +175,27 @@ for data in data_list:
                     color = "blue"
                 if "set19" in legend:
                     color = "red"
+                if "set20" in legend:
+                    color = "purple"
+                if "set21" in legend:
+                    color = "black"
                 if "out.tree" in legend:
                     color = "yellow"
             else:
                 color = None
 
-            legend = legend.replace("levi.GH.conv", "Levi-GH-conv")
-            legend = legend.replace("levi.ent.conv", "Levi-Ent-conv")
-            legend = legend.replace("levi.GH", "Levi-GH")
-            legend = legend.replace("levi.ent", "Levi-Ent")
-            legend = legend.replace("levi3.GH", "Levi-GH-MANY")
-            legend = legend.replace("levi3.ent", "Levi-Ent-MANY")
-            legend = legend.replace("bays", "Bayes")
-            legend = legend.replace("set14", "Levi-GH-boot")
-            legend = legend.replace("set15", "Levi-Ent-boot")
-            legend = legend.replace("set18", "Levi-GH")
-            legend = legend.replace("set19", "Levi-Ent")
-            legend = legend.replace("gs", "GS")
+            # legend = legend.replace("levi.GH.conv", "Levi-GH-conv")
+            # legend = legend.replace("levi.ent.conv", "Levi-Ent-conv")
+            # legend = legend.replace("levi.GH", "Levi-GH")
+            # legend = legend.replace("levi.ent", "Levi-Ent")
+            # legend = legend.replace("levi3.GH", "Levi-GH-MANY")
+            # legend = legend.replace("levi3.ent", "Levi-Ent-MANY")
+            # legend = legend.replace("bays", "Bayes")
+            # legend = legend.replace("set14", "Levi-GH-boot")
+            # legend = legend.replace("set15", "Levi-Ent-boot")
+            # legend = legend.replace("set18", "Levi-GH")
+            # legend = legend.replace("set19", "Levi-Ent")
+            # legend = legend.replace("gs", "GS")
 
 
 
