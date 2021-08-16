@@ -74,9 +74,9 @@ if __name__ == '__main__':
     algo = "DF"
     unc_method = "set20"
     prams = {
-    # 'criterion'        : "entropy",
+    'criterion'        : "entropy",
     'max_depth'        : 10,
-
+    'max_features'     : "auto",
     'n_estimators'     : 3,
 
     'epsilon'          : 2,

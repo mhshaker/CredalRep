@@ -1,10 +1,12 @@
 import os
 import numpy as np
 import UncertaintyM as unc
+import bays_opt as bo
 import random
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.utils import resample
 from sklearn.metrics import log_loss
+from sklearn.model_selection import cross_val_score
 
 def random_pram_sample(pram_dict): # for random hyper pram optimization
     sample = {}
@@ -12,6 +14,27 @@ def random_pram_sample(pram_dict): # for random hyper pram optimization
         value = random.choice(pram_dict[pram])
         sample[pram] = value
     return sample
+
+
+def sample_loss(d_pram, pram, x_train, y_train, x_test, y_test, seed):
+    model = None
+    model = RandomForestClassifier(bootstrap=True,
+        n_estimators=d_pram["n_estimators"],
+        criterion=d_pram['criterion'],
+        max_depth=pram["max_depth"],
+        max_features= d_pram['max_features'],
+        min_samples_split= pram['min_samples_split'],
+        random_state=seed,
+        verbose=0,
+        warm_start=False)
+
+    model.fit(x_train, y_train)
+    sample_acc = cross_val_score(model, X=x_train, y=y_train, scoring='roc_auc', cv=3).mean() # model.score(x_test, y_test)
+    test_prob = model.predict_proba(x_test)
+    train_prob = model.predict_proba(x_train)
+    likelyhood = log_loss(y_train,train_prob)
+
+    return sample_acc, test_prob, likelyhood
 
 
 def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=True):
@@ -104,32 +127,38 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         porb_matrix = get_prob(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set19(porb_matrix, likelyhoods, pram["epsilon"])
 
-    elif "set20" == unc_method: # set20 is about credal set with different hyper prameters. We get porb_matrix from different forests but use the same set18 method to have convexcity
+    elif "set20" == unc_method: # set20 [Random grid search] is about credal set with different hyper prameters. We get porb_matrix from different forests but use the same set18 method to have convexcity
         sample_acc_list = []
         credal_prob_matrix = []
         likelyhoods = []
         pram_smaple_list = []
 
         pram_grid = {
-            "max_depth" : np.arange(1,50),
-            "criterion" : ["gini", "entropy"],
+            "max_depth" :        np.arange(1,50),
             "min_samples_split": np.arange(2,10),
-            "max_features" : ["auto", "sqrt", "log2"]
+            # "criterion" :        ["gini", "entropy"],
+            # "max_features" :     ["auto", "sqrt", "log2"],
+            # "n_estimators":      [pram["n_estimators"]]
         }
+
 
         for iteration in range(100): # get different models with different hyper-prams with random grid search
             pram_sample = random_pram_sample(pram_grid)
 
+            
             model = None
             model = RandomForestClassifier(bootstrap=True,
                 n_estimators=pram["n_estimators"],
-                criterion=pram_sample['criterion'],
+                criterion=pram['criterion'],
                 max_depth=pram_sample["max_depth"],
-                max_features= pram_sample['max_features'],
+                max_features= pram['max_features'],
                 min_samples_split= pram_sample['min_samples_split'],
                 random_state=seed,
                 verbose=0,
                 warm_start=False)
+
+            # cross_val_score(model, X=x_train, y=y_train, scoring='roc_auc', cv=3).mean()
+
             model.fit(x_train, y_train)
             sample_acc = model.score(x_test, y_test)
             sample_acc_list.append(sample_acc)
@@ -140,6 +169,7 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
             likelyhoods.append(log_loss(y_train,train_prob))
             pram_smaple_list.append(pram_sample)
             # print(f"result {sample_acc} loss {log_loss(y_test,test_prob)} pram {pram_sample}")
+            print(f" pram {pram_sample}")
 
 
         # sorting all the sampled prams based on the acc performance to select the top k to add to the credal set
@@ -192,6 +222,68 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         porb_matrix = np.array(credal_prob_matrix)
         porb_matrix = porb_matrix.transpose([1,0,2]) # convert to the format that uncertainty_set14 uses
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set19(porb_matrix, likelyhoods, pram["epsilon"])
+
+    elif "set22" == unc_method: # set22 [Bays opt] is about credal set with different hyper prameters. We get porb_matrix from different forests but use the same set18 method to have convexcity
+        sample_acc_list = []
+        credal_prob_matrix = []
+        likelyhoods = []
+        pram_smaple_list = []
+
+        pram_grid = {
+            "max_depth" :        np.arange(1,50),
+            "min_samples_split": np.arange(2,10),
+            # "criterion" :        ["gini", "entropy"],
+            # "max_features" :     ["auto", "sqrt", "log2"],
+            # "n_estimators":      [pram["n_estimators"]]
+        }
+
+        pram_grid
+        # bays opt
+
+        # x0 samples for init
+        x0 = []
+        for i in range(5):
+            x0.append(random_pram_sample(pram_grid))
+
+        sample_acc_list, credal_prob_matrix, likelyhoods, pram_smaple_list = bo.bayesian_optimisation(
+            n_iters=100,
+            x_train=x_train,
+            y_train=y_train,
+            x_test=x_test,
+            y_test=y_test,
+            sample_loss=sample_loss, 
+            bounds=pram_grid,
+            d_param=pram,
+            x0=x0,
+            seed=seed)
+
+        # sorting all the sampled prams based on the acc performance to select the top k to add to the credal set
+        sample_acc_list = np.array(sample_acc_list) # convert all to np.array
+        credal_prob_matrix = np.array(credal_prob_matrix)
+        likelyhoods = np.array(likelyhoods)
+        pram_smaple_list = np.array(pram_smaple_list)
+
+        sorted_index = np.argsort(-sample_acc_list, kind='stable') # sort based on acc
+        sample_acc_list = sample_acc_list[sorted_index]
+        credal_prob_matrix = credal_prob_matrix[sorted_index]
+        likelyhoods = likelyhoods[sorted_index]
+        pram_smaple_list = pram_smaple_list[sorted_index]
+
+        credal_prob_matrix = credal_prob_matrix[: pram["credal_size"]] # get top k for credal set
+        likelyhoods = likelyhoods[: pram["credal_size"]]
+        pram_smaple_list = pram_smaple_list[: pram["credal_size"]]
+
+        # print("------------------------------------")
+        # print(sample_acc_list)
+        # print(credal_prob_matrix.shape)
+        # print(likelyhoods.shape)
+        # print("------------------------------------")
+        # print(pram_smaple_list)
+
+        porb_matrix = np.array(credal_prob_matrix)
+        porb_matrix = porb_matrix.transpose([1,0,2]) # convert to the format that uncertainty_set14 uses ## laplace smoothing has no effect on set20
+        total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set18(porb_matrix, likelyhoods, pram["epsilon"])
+
     elif "out.tree" == unc_method:
         porb_matrix = get_prob(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_outcome_tree(porb_matrix)
