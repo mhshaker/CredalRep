@@ -237,29 +237,6 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
             "n_estimators":      [pram["n_estimators"]]
         }
 
-        # bays opt
-
-        # my old way
-
-        # # x0 samples for init
-        # x0 = []
-        # for i in range(5):
-        #     x0.append(random_pram_sample(pram_grid))
-
-        # sample_acc_list, credal_prob_matrix, likelyhoods, pram_smaple_list = bo.bayesian_optimisation(
-        #     n_iters=100,
-        #     x_train=x_train,
-        #     y_train=y_train,
-        #     x_test=x_test,
-        #     y_test=y_test,
-        #     sample_loss=sample_loss, 
-        #     bounds=pram_grid,
-        #     d_param=pram,
-        #     x0=x0,
-        #     seed=seed)
-
-        # new sklearn way
-
         opt = BayesSearchCV(estimator=RandomForestClassifier(random_state=seed), search_spaces=pram_grid, n_iter=10, random_state=seed)
         opt_result = opt.fit(x_train, y_train)      
 
@@ -286,34 +263,6 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
             credal_prob_matrix.append(test_prob)
             train_prob = model.predict_proba(x_train)
             likelyhoods.append(log_loss(y_train,train_prob))
-
-        # # where points are the parameter values and scores are the accuracy
-        # sample_acc_list = opt_result.cv_results_["rank_test_score"]
-        # # sorting all the sampled prams based on the acc performance to select the top k to add to the credal set
-        # sample_acc_list = np.array(sample_acc_list) # convert all to np.array
-        # credal_prob_matrix = np.array(credal_prob_matrix)
-        # likelyhoods = np.array(likelyhoods)
-        # pram_smaple_list = np.array(pram_smaple_list)
-
-        # sorted_index = np.argsort(-sample_acc_list, kind='stable') # sort based on acc
-        # sample_acc_list = sample_acc_list[sorted_index]
-        # credal_prob_matrix = credal_prob_matrix[sorted_index]
-        # likelyhoods = likelyhoods[sorted_index]
-        # pram_smaple_list = pram_smaple_list[sorted_index]
-
-        # print("sample_acc_list\n", sample_acc_list)
-        # print("pram_smaple_list\n", pram_smaple_list)
-
-        # credal_prob_matrix = credal_prob_matrix[: pram["credal_size"]] # get top k for credal set
-        # likelyhoods = likelyhoods[: pram["credal_size"]]
-        # pram_smaple_list = pram_smaple_list[: pram["credal_size"]]
-
-        # print("------------------------------------")
-        # print(sample_acc_list)
-        # print(credal_prob_matrix.shape)
-        # print(likelyhoods.shape)
-        # print("------------------------------------")
-        # print(pram_smaple_list)
 
         porb_matrix = np.array(credal_prob_matrix)
         porb_matrix = porb_matrix.transpose([1,0,2]) # convert to the format that uncertainty_set14 uses ## laplace smoothing has no effect on set20
