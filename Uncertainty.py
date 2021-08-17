@@ -13,7 +13,7 @@ import sklearn
 import ray
 
 
-@ray.remote
+# @ray.remote
 def uncertainty_quantification(seed, features, target, prams, mode, algo, dir):
     s_time = time.time()
     x_train, x_test, y_train, y_test = dp.split_data(features, target, split=prams["split"], seed=seed)
@@ -72,7 +72,7 @@ if __name__ == '__main__':
     runs = 1
     data_name = "Jdata/spambase"
     algo = "DF"
-    unc_method = "set20"
+    unc_method = "set22"
     prams = {
     'criterion'        : "entropy",
     'max_depth'        : 10,
@@ -143,13 +143,13 @@ if __name__ == '__main__':
 
         print(f"job_id {job_id} start")
 
-        ray.init()
-        ray_array = []
-        for seed in range(0,runs):
-            ray_array.append(uncertainty_quantification.remote(seed, features, target, prams, unc_method, algo, dir))
-        res_array = ray.get(ray_array)
+        # ray.init()
+        # ray_array = []
+        # for seed in range(0,runs):
+        #     ray_array.append(uncertainty_quantification.remote(seed, features, target, prams, unc_method, algo, dir))
+        # res_array = ray.get(ray_array)
 
-        # uncertainty_quantification(seed, features, target, prams, unc_method, algo, dir)
+        uncertainty_quantification(seed, features, target, prams, unc_method, algo, dir)
 
     if len(sys.argv) > 1:
         mycursor.execute(f"UPDATE experiments SET status='done' Where id={job_id}")

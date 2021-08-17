@@ -7,7 +7,7 @@ verify_ssl = true
 
 [packages]
 pandas = "*"
-scikit-learn = "*"
+scikit-learn = "0.23.2"
 matplotlib = "*"
 mysql-connector-python = "*"
 ray = "*"

@@ -30,8 +30,8 @@ for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name  = "set20_random_opt3"
-    plot_name = data + "_setRandomOptFull"
+    run_name  = "set22"
+    plot_name = data + "_set22"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND (run_name='{run_name}' AND result_type='set18' OR run_name='unc_out2' AND result_type='out')"
     query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id>=4984 AND id<=4986"
@@ -177,6 +177,8 @@ for data in data_list:
                     color = "red"
                 if "set20" in legend:
                     color = "purple"
+                if "set22" in legend:
+                    color = "orange"
                 if "set21" in legend:
                     color = "black"
                 if "out.tree" in legend:
