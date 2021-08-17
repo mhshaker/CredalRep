@@ -13,7 +13,7 @@ import sklearn
 import ray
 
 
-# @ray.remote
+@ray.remote
 def uncertainty_quantification(seed, features, target, prams, mode, algo, dir):
     s_time = time.time()
     x_train, x_test, y_train, y_test = dp.split_data(features, target, split=prams["split"], seed=seed)
@@ -69,30 +69,43 @@ if __name__ == '__main__':
     # prameter init default
     job_id = 0 # for developement
     seed   = 1
-    runs = 1
+    runs = 50
     data_name = "Jdata/spambase"
     algo = "DF"
-    unc_method = "set22"
+    unc_method = "bays"
+    # prams = {
+    # 'criterion'        : "entropy",
+    # 'max_depth'        : 10,
+    # 'max_features'     : "auto",
+    # 'n_estimators'     : 3,
+
+    # 'epsilon'          : 2,
+
+    # 'credal_size'      : 10,
+    # # 'credal_sample_size' : 5,
+    # # 'credal_L'           : 3,
+
+    # # 'dropconnect_prob' : 0.2,
+    # # 'epochs'           : 1,
+    # # 'init_epochs'      : 10,
+    # # 'MC_samples'       : 5,
+
+    # 'laplace_smoothing': 1,
+    # 'split'            : 0.025,
+
+    # }
+
     prams = {
-    'criterion'        : "entropy",
-    'max_depth'        : 10,
-    'max_features'     : "auto",
-    'n_estimators'     : 3,
-
-    'epsilon'          : 2,
-
-    'credal_size'      : 10,
-    # 'credal_sample_size' : 5,
-    # 'credal_L'           : 3,
-
-    # 'dropconnect_prob' : 0.2,
-    # 'epochs'           : 1,
-    # 'init_epochs'      : 10,
-    # 'MC_samples'       : 5,
-
-    'laplace_smoothing': 1,
-    'split'            : 0.025,
-
+    'criterion'          : "entropy",
+    'max_features'       : "auto",
+    'max_depth'          : 10,
+    'n_estimators'       : 10,
+    'opt_iterations'     : 3,
+    'epsilon'            : 2,
+    'credal_size'        : 10,
+    'laplace_smoothing'  : 1,
+    'split'              : 0.30,
+    'run_start'          : 0,
     }
 
     base_dir = os.path.dirname(os.path.realpath(__file__))
@@ -142,14 +155,17 @@ if __name__ == '__main__':
         features, target = dp.load_data(data_name)
 
         print(f"job_id {job_id} start")
-
-        # ray.init()
-        # ray_array = []
-        # for seed in range(0,runs):
-        #     ray_array.append(uncertainty_quantification.remote(seed, features, target, prams, unc_method, algo, dir))
-        # res_array = ray.get(ray_array)
-
-        uncertainty_quantification(seed, features, target, prams, unc_method, algo, dir)
+        start = prams["run_start"]
+        ray.init(num_cpus=8)
+        ray_array = []
+        for seed in range(start,runs+start):
+            ray_array.append(uncertainty_quantification.remote(seed, features, target, prams, unc_method, algo, dir))
+            if seed % 8 == 0:
+                ray.wait(ray_array)
+                # print("waiting for tasks ", seed)
+                res_array = ray.get(ray_array)
+        res_array = ray.get(ray_array)
+        # uncertainty_quantification(seed, features, target, prams, unc_method, algo, dir)
 
     if len(sys.argv) > 1:
         mycursor.execute(f"UPDATE experiments SET status='done' Where id={job_id}")

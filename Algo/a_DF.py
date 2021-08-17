@@ -137,13 +137,13 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         pram_grid = {
             "max_depth" :        np.arange(1,50),
             "min_samples_split": np.arange(2,10),
-            # "criterion" :        ["gini", "entropy"],
-            # "max_features" :     ["auto", "sqrt", "log2"],
-            # "n_estimators":      [pram["n_estimators"]]
+            "criterion" :        ["gini", "entropy"],
+            "max_features" :     ["auto", "sqrt", "log2"],
+            "n_estimators":      [pram["n_estimators"]]
         }
 
 
-        for iteration in range(100): # get different models with different hyper-prams with random grid search
+        for iteration in range(pram["opt_iterations"]): # get different models with different hyper-prams with random grid search
             pram_sample = random_pram_sample(pram_grid)
 
             
@@ -185,8 +185,8 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         likelyhoods = likelyhoods[sorted_index]
         pram_smaple_list = pram_smaple_list[sorted_index]
 
-        print("sample_acc_list\n", sample_acc_list)
-        print("pram_smaple_list\n", pram_smaple_list)
+        # print("sample_acc_list\n", sample_acc_list)
+        # print("pram_smaple_list\n", pram_smaple_list)
 
         credal_prob_matrix = credal_prob_matrix[: pram["credal_size"]] # get top k for credal set
         likelyhoods = likelyhoods[: pram["credal_size"]]
@@ -201,6 +201,7 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
 
         porb_matrix = np.array(credal_prob_matrix)
         porb_matrix = porb_matrix.transpose([1,0,2]) # convert to the format that uncertainty_set14 uses ## laplace smoothing has no effect on set20
+        # print(porb_matrix.shape)
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set18(porb_matrix, likelyhoods, pram["epsilon"])
     elif "set21" == unc_method: # Similar to set20
         credal_prob_matrix = []
@@ -237,7 +238,8 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
             "n_estimators":      [pram["n_estimators"]]
         }
 
-        opt = BayesSearchCV(estimator=RandomForestClassifier(random_state=seed), search_spaces=pram_grid, n_iter=10, random_state=seed)
+        opt = BayesSearchCV(estimator=RandomForestClassifier(random_state=seed), search_spaces=pram_grid, n_iter=pram["opt_iterations"], random_state=seed)
+        # print(">>> x_train.shape" , x_train.shape)
         opt_result = opt.fit(x_train, y_train)      
 
         # get ranking and params
@@ -266,6 +268,7 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
 
         porb_matrix = np.array(credal_prob_matrix)
         porb_matrix = porb_matrix.transpose([1,0,2]) # convert to the format that uncertainty_set14 uses ## laplace smoothing has no effect on set20
+        print(porb_matrix.shape)
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set18(porb_matrix, likelyhoods, pram["epsilon"])
 
     elif "out.tree" == unc_method:
