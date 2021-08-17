@@ -38,7 +38,7 @@ def sample_loss(d_pram, pram, x_train, y_train, x_test, y_test, seed):
     return sample_acc, test_prob, likelyhood
 
 
-def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=True):
+def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=True, opt_pram_list=None):
     np.random.seed(seed)
     us = unc_method.split('_')
     unc_method = us[0]
@@ -230,34 +230,34 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
 
     elif "set22" == unc_method: # set22 [Bays opt] is about credal set with different hyper prameters. We get porb_matrix from different forests but use the same set18 method to have convexcity
 
-        pram_grid = {
-            "max_depth" :        np.arange(1,50),
-            "min_samples_split": np.arange(2,10),
-            "criterion" :        ["gini", "entropy"],
-            "max_features" :     ["auto", "sqrt", "log2"],
-            "n_estimators":      [pram["n_estimators"]]
-        }
+        # pram_grid = {
+        #     "max_depth" :        np.arange(1,50),
+        #     "min_samples_split": np.arange(2,10),
+        #     "criterion" :        ["gini", "entropy"],
+        #     "max_features" :     ["auto", "sqrt", "log2"],
+        #     "n_estimators":      [pram["n_estimators"]]
+        # }
 
-        opt = BayesSearchCV(estimator=RandomForestClassifier(random_state=seed), search_spaces=pram_grid, n_iter=pram["opt_iterations"], random_state=seed)
-        # print(">>> x_train.shape" , x_train.shape)
-        opt_result = opt.fit(x_train, y_train)      
+        # opt = BayesSearchCV(estimator=RandomForestClassifier(random_state=seed), search_spaces=pram_grid, n_iter=pram["opt_iterations"], random_state=seed)
+        # # print(">>> x_train.shape" , x_train.shape)
+        # opt_result = opt.fit(x_train, y_train)      
 
-        # get ranking and params
-        params_searched = np.array(opt_result.cv_results_["params"])
-        params_rank = np.array(opt_result.cv_results_["rank_test_score"])
-        # sprt based on rankings
-        sorted_index = np.argsort(params_rank, kind='stable') # sort based on rank
-        params_searched = params_searched[sorted_index]
-        params_rank = params_rank[sorted_index]
-        # select top K
-        params_searched = params_searched[: pram["credal_size"]]
-        params_rank = params_rank[: pram["credal_size"]]
-        # retrain with top K and get test_prob, likelihood values
+        # # get ranking and params
+        # params_searched = np.array(opt_result.cv_results_["params"])
+        # params_rank = np.array(opt_result.cv_results_["rank_test_score"])
+        # # sprt based on rankings
+        # sorted_index = np.argsort(params_rank, kind='stable') # sort based on rank
+        # params_searched = params_searched[sorted_index]
+        # params_rank = params_rank[sorted_index]
+        # # select top K
+        # params_searched = params_searched[: pram["credal_size"]]
+        # params_rank = params_rank[: pram["credal_size"]]
+        # # retrain with top K and get test_prob, likelihood values
 
         credal_prob_matrix = []
         likelyhoods = []
 
-        for param in params_searched:
+        for param in opt_pram_list: # params_searched:
             model = None
             model = RandomForestClassifier(**param,random_state=seed)
             model.fit(x_train, y_train)

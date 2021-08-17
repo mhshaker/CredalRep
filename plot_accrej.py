@@ -30,11 +30,11 @@ for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name  = "sk_opt_it50_8_100"
-    plot_name = data + "_MRT"
+    run_name  = "set22VSset20"
+    plot_name = data + "_set22VSset20_Fix"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND (run_name='{run_name}' AND result_type='set18' OR run_name='unc_out2' AND result_type='out')"
-    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
-    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5094 OR id=5101"
+    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
+    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5094 OR id=5101"
 
     ########################################################################################################################################################
 

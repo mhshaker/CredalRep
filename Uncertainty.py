@@ -12,14 +12,16 @@ import mysql.connector as db
 import sklearn
 import ray
 
+from skopt import BayesSearchCV
+from sklearn.ensemble import RandomForestClassifier
 
 @ray.remote
-def uncertainty_quantification(seed, features, target, prams, mode, algo, dir):
+def uncertainty_quantification(seed, features, target, prams, mode, algo, dir, opt_pram_list=None):
     s_time = time.time()
     x_train, x_test, y_train, y_test = dp.split_data(features, target, split=prams["split"], seed=seed)
     
     if algo == "DF":
-        predictions , t_unc, e_unc, a_unc, model = df.DF_run(x_train, x_test, y_train, y_test, prams, unc_method, seed)
+        predictions , t_unc, e_unc, a_unc, model = df.DF_run(x_train, x_test, y_train, y_test, prams, unc_method, seed, opt_pram_list=opt_pram_list)
         probs = model.predict_proba(x_test)
     # elif algo == "eRF":
     #     predictions , t_unc, e_unc, a_unc, model = erf.eRF_run(x_train, x_test, y_train, y_test, prams, unc_method, seed)
@@ -69,10 +71,10 @@ if __name__ == '__main__':
     # prameter init default
     job_id = 0 # for developement
     seed   = 1
-    runs = 50
+    runs = 1
     data_name = "Jdata/spambase"
     algo = "DF"
-    unc_method = "bays"
+    unc_method = "set22"
     # prams = {
     # 'criterion'        : "entropy",
     # 'max_depth'        : 10,
@@ -133,7 +135,7 @@ if __name__ == '__main__':
         m = prams["unc_method"]
         print(f"{data_name} n_estimators {n} unc_method {m}")
         x_train, x_test, y_train, y_test = dg.create(data_name)
-        predictions , t_unc, e_unc, a_unc, model = df.DF_run(x_train, x_test, y_train, y_test, prams, unc_method, seed)
+        predictions , t_unc, e_unc, a_unc, model = df.DF_run(x_train, x_test, y_train, y_test, prams, unc_method, seed, opt_pram_list=opt_pram_list)
         t = np.round(t_unc, decimals=2)
         a = np.round(a_unc, decimals=2)
         e = np.round(e_unc, decimals=2)
@@ -154,18 +156,42 @@ if __name__ == '__main__':
     else:
         features, target = dp.load_data(data_name)
 
+        # hyper param opt before parallel runs
+        opt_pram_list = None
+        if unc_method == "set22":
+            pram_grid = {
+                "max_depth" :        np.arange(1,50),
+                "min_samples_split": np.arange(2,10),
+                "criterion" :        ["gini", "entropy"],
+                "max_features" :     ["auto", "sqrt", "log2"],
+                "n_estimators":      [prams["n_estimators"]]
+            }
+
+            opt = BayesSearchCV(estimator=RandomForestClassifier(random_state=seed), search_spaces=pram_grid, n_iter=prams["opt_iterations"], random_state=seed)
+            opt_result = opt.fit(features, target)  # this is on all the data which is not the best practice    
+
+            # get ranking and params
+            params_searched = np.array(opt_result.cv_results_["params"])
+            params_rank = np.array(opt_result.cv_results_["rank_test_score"])
+            # sprt based on rankings
+            sorted_index = np.argsort(params_rank, kind='stable') # sort based on rank
+            params_searched = params_searched[sorted_index]
+            params_rank = params_rank[sorted_index]
+            # select top K
+            opt_pram_list = params_searched[: prams["credal_size"]]
+            params_rank = params_rank[: prams["credal_size"]]
+            # retrain with top K and get test_prob, likelihood values
+
+
         print(f"job_id {job_id} start")
         start = prams["run_start"]
         ray.init(num_cpus=8)
         ray_array = []
         for seed in range(start,runs+start):
-            ray_array.append(uncertainty_quantification.remote(seed, features, target, prams, unc_method, algo, dir))
-            if seed % 8 == 0:
-                ray.wait(ray_array)
-                # print("waiting for tasks ", seed)
-                res_array = ray.get(ray_array)
+            ray_array.append(uncertainty_quantification.remote(seed, features, target, prams, unc_method, algo, dir, opt_pram_list))
         res_array = ray.get(ray_array)
-        # uncertainty_quantification(seed, features, target, prams, unc_method, algo, dir)
+
+        # uncertainty_quantification(seed, features, target, prams, unc_method, algo, dir, opt_pram_list=opt_pram_list)
 
     if len(sys.argv) > 1:
         mycursor.execute(f"UPDATE experiments SET status='done' Where id={job_id}")
