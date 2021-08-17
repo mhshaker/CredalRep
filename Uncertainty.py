@@ -158,29 +158,29 @@ if __name__ == '__main__':
 
         # hyper param opt before parallel runs
         opt_pram_list = None
-        if unc_method == "set22":
-            pram_grid = {
-                "max_depth" :        np.arange(1,50),
-                "min_samples_split": np.arange(2,10),
-                "criterion" :        ["gini", "entropy"],
-                "max_features" :     ["auto", "sqrt", "log2"],
-                "n_estimators":      [prams["n_estimators"]]
-            }
+        # if unc_method == "set22":
+        #     pram_grid = {
+        #         "max_depth" :        np.arange(1,50),
+        #         "min_samples_split": np.arange(2,10),
+        #         "criterion" :        ["gini", "entropy"],
+        #         "max_features" :     ["auto", "sqrt", "log2"],
+        #         "n_estimators":      [prams["n_estimators"]]
+        #     }
 
-            opt = BayesSearchCV(estimator=RandomForestClassifier(random_state=seed), search_spaces=pram_grid, n_iter=prams["opt_iterations"], random_state=seed)
-            opt_result = opt.fit(features, target)  # this is on all the data which is not the best practice    
+        #     opt = BayesSearchCV(estimator=RandomForestClassifier(random_state=seed), search_spaces=pram_grid, n_iter=prams["opt_iterations"], random_state=seed)
+        #     opt_result = opt.fit(features, target)  # this is on all the data which is not the best practice    
 
-            # get ranking and params
-            params_searched = np.array(opt_result.cv_results_["params"])
-            params_rank = np.array(opt_result.cv_results_["rank_test_score"])
-            # sprt based on rankings
-            sorted_index = np.argsort(params_rank, kind='stable') # sort based on rank
-            params_searched = params_searched[sorted_index]
-            params_rank = params_rank[sorted_index]
-            # select top K
-            opt_pram_list = params_searched[: prams["credal_size"]]
-            params_rank = params_rank[: prams["credal_size"]]
-            # retrain with top K and get test_prob, likelihood values
+        #     # get ranking and params
+        #     params_searched = np.array(opt_result.cv_results_["params"])
+        #     params_rank = np.array(opt_result.cv_results_["rank_test_score"])
+        #     # sprt based on rankings
+        #     sorted_index = np.argsort(params_rank, kind='stable') # sort based on rank
+        #     params_searched = params_searched[sorted_index]
+        #     params_rank = params_rank[sorted_index]
+        #     # select top K
+        #     opt_pram_list = params_searched[: prams["credal_size"]]
+        #     params_rank = params_rank[: prams["credal_size"]]
+        #     # retrain with top K and get test_prob, likelihood values
 
 
         print(f"job_id {job_id} start")

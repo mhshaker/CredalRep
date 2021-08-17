@@ -204,60 +204,111 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         # print(porb_matrix.shape)
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set18(porb_matrix, likelyhoods, pram["epsilon"])
     elif "set21" == unc_method: # Similar to set20
+        sample_acc_list = []
         credal_prob_matrix = []
         likelyhoods = []
-        for num_layers in [2,3,5,7,10,12,15,18,20]: # get different models with different hyper-prams
+        pram_smaple_list = []
+
+        pram_grid = {
+            "max_depth" :        np.arange(1,50),
+            "min_samples_split": np.arange(2,10),
+            "criterion" :        ["gini", "entropy"],
+            "max_features" :     ["auto", "sqrt", "log2"],
+            "n_estimators":      [pram["n_estimators"]]
+        }
+
+
+        for iteration in range(pram["opt_iterations"]): # get different models with different hyper-prams with random grid search
+            pram_sample = random_pram_sample(pram_grid)
+
+            
             model = None
             model = RandomForestClassifier(bootstrap=True,
-                # criterion=pram['criterion'],
-                max_depth=num_layers,
                 n_estimators=pram["n_estimators"],
-                # max_features= "sqrt",
-                # min_samples_leaf= pram['min_samples_leaf'],
+                criterion=pram['criterion'],
+                max_depth=pram_sample["max_depth"],
+                max_features= pram['max_features'],
+                min_samples_split= pram_sample['min_samples_split'],
                 random_state=seed,
                 verbose=0,
                 warm_start=False)
+
+            # cross_val_score(model, X=x_train, y=y_train, scoring='roc_auc', cv=3).mean()
+
             model.fit(x_train, y_train)
+            sample_acc = model.score(x_test, y_test)
+            sample_acc_list.append(sample_acc)
 
             test_prob = model.predict_proba(x_test)
             credal_prob_matrix.append(test_prob)
             train_prob = model.predict_proba(x_train)
             likelyhoods.append(log_loss(y_train,train_prob))
+            pram_smaple_list.append(pram_sample)
+            # print(f"result {sample_acc} loss {log_loss(y_test,test_prob)} pram {pram_sample}")
+            # print(f" pram {pram_sample}")
+
+
+        # sorting all the sampled prams based on the acc performance to select the top k to add to the credal set
+        sample_acc_list = np.array(sample_acc_list) # convert all to np.array
+        credal_prob_matrix = np.array(credal_prob_matrix)
+        likelyhoods = np.array(likelyhoods)
+        pram_smaple_list = np.array(pram_smaple_list)
+
+        sorted_index = np.argsort(-sample_acc_list, kind='stable') # sort based on acc
+        sample_acc_list = sample_acc_list[sorted_index]
+        credal_prob_matrix = credal_prob_matrix[sorted_index]
+        likelyhoods = likelyhoods[sorted_index]
+        pram_smaple_list = pram_smaple_list[sorted_index]
+
+        # print("sample_acc_list\n", sample_acc_list)
+        # print("pram_smaple_list\n", pram_smaple_list)
+
+        credal_prob_matrix = credal_prob_matrix[: pram["credal_size"]] # get top k for credal set
+        likelyhoods = likelyhoods[: pram["credal_size"]]
+        pram_smaple_list = pram_smaple_list[: pram["credal_size"]]
+
+        # print("------------------------------------")
+        # print(sample_acc_list)
+        # print(credal_prob_matrix.shape)
+        # print(likelyhoods.shape)
+        # print("------------------------------------")
+        # print(pram_smaple_list)
 
         porb_matrix = np.array(credal_prob_matrix)
-        porb_matrix = porb_matrix.transpose([1,0,2]) # convert to the format that uncertainty_set14 uses
+        porb_matrix = porb_matrix.transpose([1,0,2]) # convert to the format that uncertainty_set14 uses ## laplace smoothing has no effect on set20
+        # print(porb_matrix.shape)
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set19(porb_matrix, likelyhoods, pram["epsilon"])
 
     elif "set22" == unc_method: # set22 [Bays opt] is about credal set with different hyper prameters. We get porb_matrix from different forests but use the same set18 method to have convexcity
 
-        # pram_grid = {
-        #     "max_depth" :        np.arange(1,50),
-        #     "min_samples_split": np.arange(2,10),
-        #     "criterion" :        ["gini", "entropy"],
-        #     "max_features" :     ["auto", "sqrt", "log2"],
-        #     "n_estimators":      [pram["n_estimators"]]
-        # }
+        pram_grid = {
+            "max_depth" :        np.arange(1,50),
+            "min_samples_split": np.arange(2,10),
+            "criterion" :        ["gini", "entropy"],
+            "max_features" :     ["auto", "sqrt", "log2"],
+            "n_estimators":      [pram["n_estimators"]]
+        }
 
-        # opt = BayesSearchCV(estimator=RandomForestClassifier(random_state=seed), search_spaces=pram_grid, n_iter=pram["opt_iterations"], random_state=seed)
-        # # print(">>> x_train.shape" , x_train.shape)
-        # opt_result = opt.fit(x_train, y_train)      
+        opt = BayesSearchCV(estimator=RandomForestClassifier(), search_spaces=pram_grid, n_iter=pram["opt_iterations"], random_state=seed)
+        print(">>> y_train " , np.unique(y_train))
+        opt_result = opt.fit(x_train, y_train)      
 
-        # # get ranking and params
-        # params_searched = np.array(opt_result.cv_results_["params"])
-        # params_rank = np.array(opt_result.cv_results_["rank_test_score"])
-        # # sprt based on rankings
-        # sorted_index = np.argsort(params_rank, kind='stable') # sort based on rank
-        # params_searched = params_searched[sorted_index]
-        # params_rank = params_rank[sorted_index]
-        # # select top K
-        # params_searched = params_searched[: pram["credal_size"]]
-        # params_rank = params_rank[: pram["credal_size"]]
-        # # retrain with top K and get test_prob, likelihood values
+        # get ranking and params
+        params_searched = np.array(opt_result.cv_results_["params"])
+        params_rank = np.array(opt_result.cv_results_["rank_test_score"])
+        # sprt based on rankings
+        sorted_index = np.argsort(params_rank, kind='stable') # sort based on rank
+        params_searched = params_searched[sorted_index]
+        params_rank = params_rank[sorted_index]
+        # select top K
+        params_searched = params_searched[: pram["credal_size"]]
+        params_rank = params_rank[: pram["credal_size"]]
+        # retrain with top K and get test_prob, likelihood values
 
         credal_prob_matrix = []
         likelyhoods = []
 
-        for param in opt_pram_list: # params_searched:
+        for param in params_searched: # opt_pram_list: 
             model = None
             model = RandomForestClassifier(**param,random_state=seed)
             model.fit(x_train, y_train)
