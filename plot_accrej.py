@@ -14,27 +14,29 @@ if not os.path.exists(pic_dir):
 
 unc_value_plot = False
 local = False
-color_correct = True
+color_correct = False
 vertical_plot = False
 single_plot = False
-legend_flag = True
+legend_flag = False
 
-# data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod", "bank", "QSAR", "spambase", "iris", "heartdisease"] 
+data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod", "bank", "QSAR", "spambase"] 
 # data_list  = ["vertebral","breast", "ionosphere", "blod", "QSAR", "wine_qw"] 
 # data_list = ["climate", "parkinsons", "spambase"]
 # data_list = ["climate", "vertebral"]
-data_list = ["parkinsons"]
+# data_list = ["parkinsons"]
 modes     = "eat"
 
 for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name  = "set22VSset20"
-    plot_name = data + "_set22VSset20_Fix"
-    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND (run_name='{run_name}' AND result_type='set18' OR run_name='unc_out2' AND result_type='out')"
-    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
-    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5094 OR id=5101"
+    run_name   = "presentation"
+    run_name2  = "presentation100"
+    run_name3  = "presentation50"
+    plot_name = data + "_OptIt"
+    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND (run_name='{run_name}' OR run_name='{run_name2}' OR run_name='{run_name3}') AND result_type='set20'"
+    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
+    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5139 OR id=5193 OR id=5232"
 
     ########################################################################################################################################################
 
@@ -104,17 +106,27 @@ for data in data_list:
 
             legend = ""
 
-            # prams = str(job[2])
-            # pram_name = "n_estimators"
-            # search_pram = f"'{pram_name}': "
-            # v_index_s = prams.index(search_pram)
-            # v_index_e = prams.index(",", v_index_s)
-            # max_depth = int(prams[v_index_s+len(search_pram) : v_index_e])
-            # legend += "n_estimators: " + str(max_depth)
+
 
             for text in job[3:]:
                 legend += " " +str(text) 
             # legend += mode   
+
+            # prams = str(job[2])
+            # pram_name = "credal_size"
+            # search_pram = f"'{pram_name}': "
+            # v_index_s = prams.index(search_pram)
+            # v_index_e = prams.index(",", v_index_s)
+            # max_depth = int(prams[v_index_s+len(search_pram) : v_index_e])
+            # legend += " cs: " + str(max_depth)
+
+            prams = str(job[2])
+            pram_name = "opt_iterations"
+            search_pram = f"'{pram_name}': "
+            v_index_s = prams.index(search_pram)
+            v_index_e = prams.index(",", v_index_s)
+            max_depth = int(prams[v_index_s+len(search_pram) : v_index_e])
+            legend += " opt: " + str(max_depth)
 
             # get the list of file names
             file_list = []
@@ -144,6 +156,8 @@ for data in data_list:
             linestyle = '-'
             if "set19" in legend:
                 linestyle = '--'
+            if "set21" in legend:
+                linestyle = '--'
             # if "out" in legend:
             #     linestyle = ':'
             if "bays" in legend:
@@ -172,43 +186,37 @@ for data in data_list:
                 if "set15" in legend:
                     color = "red"
                 if "set18" in legend:
-                    color = "blue"
+                    color = "red"
                 if "set19" in legend:
                     color = "red"
                 if "set20" in legend:
                     color = "purple"
-                if "set22" in legend:
-                    color = "orange"
                 if "set21" in legend:
-                    color = "black"
-                if "out.tree" in legend:
-                    color = "yellow"
+                    color = "purple"
+                if "out" in legend:
+                    color = "orange"
             else:
                 color = None
 
-            # legend = legend.replace("levi.GH.conv", "Levi-GH-conv")
-            # legend = legend.replace("levi.ent.conv", "Levi-Ent-conv")
-            # legend = legend.replace("levi.GH", "Levi-GH")
-            # legend = legend.replace("levi.ent", "Levi-Ent")
-            # legend = legend.replace("levi3.GH", "Levi-GH-MANY")
-            # legend = legend.replace("levi3.ent", "Levi-Ent-MANY")
-            # legend = legend.replace("bays", "Bayes")
-            # legend = legend.replace("set14", "Levi-GH-boot")
-            # legend = legend.replace("set15", "Levi-Ent-boot")
-            # legend = legend.replace("set18", "Levi-GH")
-            # legend = legend.replace("set19", "Levi-Ent")
-            # legend = legend.replace("gs", "GS")
+            legend = legend.replace("levi.GH.conv", "Levi-GH-conv")
+            legend = legend.replace("levi.ent.conv", "Levi-Ent-conv")
+            legend = legend.replace("levi.GH", "Levi-GH")
+            legend = legend.replace("levi.ent", "Levi-Ent")
+            legend = legend.replace("levi3.GH", "Levi-GH-MANY")
+            legend = legend.replace("levi3.ent", "Levi-Ent-MANY")
+            legend = legend.replace("bays", "Bayes")
+            legend = legend.replace("set14", "Levi-GH-boot")
+            legend = legend.replace("set15", "Levi-Ent-boot")
+            legend = legend.replace("set18", "L-C1-GH")
+            legend = legend.replace("set19", "L-C1-Ent")
+            legend = legend.replace("set20", "L-C2-GH")
+            legend = legend.replace("set21", "L-C2-Ent")
+            legend = legend.replace("gs", "GS")
 
 
 
             avg_acc = avg_acc * 100 # to have percentates and not decimals
 
-            if single_plot:
-                axs.plot(steps, avg_acc, linestyle=linestyle, color=color)
-            else:
-                axs[mode_index].plot(steps, avg_acc, linestyle=linestyle, color=color)
-                # axs[mode_index].grid(which='minor') # to show grids in the plot
-            
             if mode == "a":
                 mode_title = "AU"
             if mode == "e":
@@ -227,6 +235,14 @@ for data in data_list:
             else:
                 axs[mode_index].set_title(data + " " + mode_title)
             flap =False
+
+            if single_plot:
+                axs.plot(steps, avg_acc, linestyle=linestyle, color=color)
+            else:
+                axs[mode_index].plot(steps, avg_acc, linestyle=linestyle, color=color, label=legend)
+                axs[mode_index].legend() # axs,labels=legend_list, loc="lower center", ncol=6
+                # axs[mode_index].grid(which='minor') # to show grids in the plot
+            
 
     if single_plot == False:
         acc_lable_flag = True

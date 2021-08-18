@@ -74,7 +74,7 @@ if __name__ == '__main__':
     runs = 1
     data_name = "Jdata/spambase"
     algo = "DF"
-    unc_method = "set22"
+    unc_method = "set21"
     # prams = {
     # 'criterion'        : "entropy",
     # 'max_depth'        : 10,

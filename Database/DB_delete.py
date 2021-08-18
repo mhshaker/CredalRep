@@ -7,7 +7,7 @@ mydb = db.connect(host="131.234.250.119", user="noctua", passwd="uncertainty", d
 mycursor = mydb.cursor()
 
 if(update == False):
-    sql = "DELETE FROM experiments WHERE id >= 3953"
+    sql = "DELETE FROM experiments WHERE id >= 5118"
 else:
     # sql = "UPDATE experiments SET status='Error' Where status='running'"
     # sql = "UPDATE experiments SET status='pending' Where run_name='DF_sampling'"
