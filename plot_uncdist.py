@@ -28,10 +28,15 @@ for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name  = "ROC_area"
+    # run_name  = "ROC_area"
+    # plot_name = data + "_dist"
+    run_name   = "presentation50_30"
+    run_name2  = "presentation100"
     plot_name = data + "_dist"
+    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND ((run_name='{run_name}' AND (result_type='set20' OR result_type='set21')) OR (run_name='{run_name2}' AND (result_type='bays' OR result_type='set18' OR result_type='set19')))"
+
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND (run_name='{run_name}' AND result_type='set18' OR run_name='unc_out2' AND result_type='out')"
-    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
+    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id>=4984 AND id<=4986"
 
     ########################################################################################################################################################
@@ -66,7 +71,7 @@ for data in data_list:
         jobs.append(job)
 
     fig, axs = plt.subplots(len(jobs),len(modes))
-    fig.set_figheight(15)
+    fig.set_figheight(25)
     fig.set_figwidth(15)
     legend_list = []
 

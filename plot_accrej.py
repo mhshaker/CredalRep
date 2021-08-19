@@ -14,7 +14,7 @@ if not os.path.exists(pic_dir):
 
 unc_value_plot = False
 local = False
-color_correct = False
+color_correct = True
 vertical_plot = False
 single_plot = False
 legend_flag = False
@@ -30,11 +30,10 @@ for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name   = "presentation"
+    run_name   = "presentation50_30"
     run_name2  = "presentation100"
-    run_name3  = "presentation50"
-    plot_name = data + "_OptIt"
-    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND (run_name='{run_name}' OR run_name='{run_name2}' OR run_name='{run_name3}') AND result_type='set20'"
+    plot_name = data + "_main"
+    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND ((run_name='{run_name}' AND (result_type='set20' OR result_type='set21')) OR (run_name='{run_name2}' AND (result_type='bays' OR result_type='set18' OR result_type='set19')))"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5139 OR id=5193 OR id=5232"
 
@@ -120,13 +119,13 @@ for data in data_list:
             # max_depth = int(prams[v_index_s+len(search_pram) : v_index_e])
             # legend += " cs: " + str(max_depth)
 
-            prams = str(job[2])
-            pram_name = "opt_iterations"
-            search_pram = f"'{pram_name}': "
-            v_index_s = prams.index(search_pram)
-            v_index_e = prams.index(",", v_index_s)
-            max_depth = int(prams[v_index_s+len(search_pram) : v_index_e])
-            legend += " opt: " + str(max_depth)
+            # prams = str(job[2])
+            # pram_name = "opt_iterations"
+            # search_pram = f"'{pram_name}': "
+            # v_index_s = prams.index(search_pram)
+            # v_index_e = prams.index(",", v_index_s)
+            # max_depth = int(prams[v_index_s+len(search_pram) : v_index_e])
+            # legend += " opt: " + str(max_depth)
 
             # get the list of file names
             file_list = []
