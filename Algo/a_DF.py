@@ -8,6 +8,7 @@ from sklearn.utils import resample
 from sklearn.metrics import log_loss
 from sklearn.model_selection import cross_val_score
 from skopt import BayesSearchCV
+from sklearn.model_selection import RandomizedSearchCV
 
 def random_pram_sample(pram_dict): # for random hyper pram optimization
     sample = {}
@@ -141,7 +142,6 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
             "max_features" :     ["auto", "sqrt", "log2"],
             "n_estimators":      [pram["n_estimators"]]
         }
-
 
         for iteration in range(pram["opt_iterations"]): # get different models with different hyper-prams with random grid search
             pram_sample = random_pram_sample(pram_grid)
@@ -320,6 +320,52 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         porb_matrix = np.array(credal_prob_matrix)
         porb_matrix = porb_matrix.transpose([1,0,2]) # convert to the format that uncertainty_set14 uses ## laplace smoothing has no effect on set20
         print(porb_matrix.shape)
+        total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set18(porb_matrix, likelyhoods, pram["epsilon"])
+
+    elif "set23" == unc_method: # set20 [Random grid search] is about credal set with different hyper prameters. We get porb_matrix from different forests but use the same set18 method to have convexcity
+        sample_acc_list = []
+        credal_prob_matrix = []
+        likelyhoods = []
+        pram_smaple_list = []
+
+        pram_grid = {
+            "max_depth" :        np.arange(1,50),
+            "min_samples_split": np.arange(2,10),
+            "criterion" :        ["gini", "entropy"],
+            "max_features" :     ["auto", "sqrt", "log2"],
+            "n_estimators":      [pram["n_estimators"]]
+        }
+
+        opt = RandomizedSearchCV(estimator=RandomForestClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], random_state=seed)
+        # print(">>> y_train " , np.unique(y_train))
+        opt_result = opt.fit(x_train, y_train)      
+
+        # get ranking and params
+        params_searched = np.array(opt_result.cv_results_["params"])
+        params_rank = np.array(opt_result.cv_results_["rank_test_score"])
+        # sprt based on rankings
+        sorted_index = np.argsort(params_rank, kind='stable') # sort based on rank
+        params_searched = params_searched[sorted_index]
+        params_rank = params_rank[sorted_index]
+        # select top K
+        params_searched = params_searched[: pram["credal_size"]]
+        params_rank = params_rank[: pram["credal_size"]]
+        # retrain with top K and get test_prob, likelihood values
+
+        credal_prob_matrix = []
+        likelyhoods = []
+
+        for param in params_searched: # opt_pram_list: 
+            model = None
+            model = RandomForestClassifier(**param,random_state=seed)
+            model.fit(x_train, y_train)
+            test_prob = model.predict_proba(x_test)
+            credal_prob_matrix.append(test_prob)
+            train_prob = model.predict_proba(x_train)
+            likelyhoods.append(log_loss(y_train,train_prob))
+
+        porb_matrix = np.array(credal_prob_matrix)
+        porb_matrix = porb_matrix.transpose([1,0,2]) # convert to the format that uncertainty_set14 uses ## laplace smoothing has no effect on set20
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set18(porb_matrix, likelyhoods, pram["epsilon"])
 
     elif "out.tree" == unc_method:

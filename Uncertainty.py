@@ -72,9 +72,9 @@ if __name__ == '__main__':
     job_id = 0 # for developement
     seed   = 1
     runs = 1
-    data_name = "Jdata/spambase"
+    data_name = "Jdata/parkinsons"
     algo = "DF"
-    unc_method = "set21"
+    unc_method = "set23"
     # prams = {
     # 'criterion'        : "entropy",
     # 'max_depth'        : 10,

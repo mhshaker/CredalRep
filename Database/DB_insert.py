@@ -3,14 +3,14 @@ import os
 
 auto_run = False
 
-data_names     = ["Jdata/parkinsons", "Jdata/vertebral","Jdata/ionosphere", "Jdata/climate", "Jdata/blod", "Jdata/breast","Jdata/bank", "Jdata/QSAR", "Jdata/spambase"] # 
+# data_names     = ["Jdata/parkinsons", "Jdata/vertebral","Jdata/ionosphere", "Jdata/climate", "Jdata/blod", "Jdata/breast","Jdata/bank", "Jdata/QSAR", "Jdata/spambase"] # 
 # data_names     = ["Jdata/parkinsons","Jdata/ionosphere", "Jdata/blod", "Jdata/breast", "Jdata/QSAR", "Jdata/wine_qw"] # 
 # data_names     = ["Jdata/vertebral", "Jdata/climate","Jdata/bank", "Jdata/spambase"] # 
 # data_names     = ["Jdata/iris"] 
-# data_names     = ["Jdata/parkinsons"] 
+data_names     = ["Jdata/parkinsons"] 
 algos          = ["DF"] # ,"LR"
 # modes          = ["bays", "set18", "set19", "set20", "set21", "out"] #  "levi.ent", "levi.GH.conv", "levi.ent.conv"  "levi.ent" ["ent_e","ent_a","ent_t", "random"]  # ent_e","ent_a","ent_t  "set14", "set15", "set14.convex", "set15.convex", "ent.levi"
-modes          = ["set20", "set21"] #  "levi.ent", "levi.GH.conv", "levi.ent.conv"  "levi.ent" ["ent_e","ent_a","ent_t", "random"]  # ent_e","ent_a","ent_t  "set14", "set15", "set14.convex", "set15.convex", "ent.levi"
+modes          = ["set23"] #  "levi.ent", "levi.GH.conv", "levi.ent.conv"  "levi.ent" ["ent_e","ent_a","ent_t", "random"]  # ent_e","ent_a","ent_t  "set14", "set15", "set14.convex", "set15.convex", "ent.levi"
 # modes          = [] 
 task           = "unc"
 runs           = 100
@@ -21,7 +21,7 @@ prams = {
 'n_estimators'       : 10,
 'opt_iterations'     : 50,
 'epsilon'            : 2,
-'credal_size'        : 30,
+'credal_size'        : 50,
 'laplace_smoothing'  : 1,
 'split'              : 0.30,
 'run_start'          : 0,
@@ -31,7 +31,7 @@ prams = {
 for algo in algos:
     for data_name in data_names:
         for mode in modes:
-            run_name       = "presentation50_30" #f"{mode}_{algo}" + "noctua_test" # if you want a specific name give it here
+            run_name       = "SK_Random_new_test" #f"{mode}_{algo}" + "noctua_test" # if you want a specific name give it here
             description    = "acc_hist"
 
             mydb = db.connect(host="131.234.250.119", user="noctua", passwd="uncertainty", database="uncertainty")

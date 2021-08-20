@@ -19,22 +19,22 @@ vertical_plot = False
 single_plot = False
 legend_flag = False
 
-data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod", "bank", "QSAR", "spambase"] 
+# data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod", "bank", "QSAR", "spambase"] 
 # data_list  = ["vertebral","breast", "ionosphere", "blod", "QSAR", "wine_qw"] 
 # data_list = ["climate", "parkinsons", "spambase"]
 # data_list = ["climate", "vertebral"]
-# data_list = ["parkinsons"]
+data_list = ["parkinsons"]
 modes     = "eat"
 
 for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name   = "presentation50_30"
+    run_name   = "SK_Random_new_test"
     run_name2  = "presentation100"
-    plot_name = data + "_main"
-    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND ((run_name='{run_name}' AND (result_type='set20' OR result_type='set21')) OR (run_name='{run_name2}' AND (result_type='bays' OR result_type='set18' OR result_type='set19')))"
-    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
+    plot_name = data + "_RR2"
+    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND ((run_name='{run_name}' AND (result_type='set20' OR result_type='set21')) OR (run_name='{run_name2}' AND (result_type='bays' OR result_type='set18' OR result_type='set19')))"
+    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5139 OR id=5193 OR id=5232"
 
     ########################################################################################################################################################
