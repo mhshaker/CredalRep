@@ -75,40 +75,40 @@ if __name__ == '__main__':
     data_name = "Jdata/parkinsons"
     algo = "DF"
     unc_method = "set23"
-    # prams = {
-    # 'criterion'        : "entropy",
-    # 'max_depth'        : 10,
-    # 'max_features'     : "auto",
-    # 'n_estimators'     : 3,
-
-    # 'epsilon'          : 2,
-
-    # 'credal_size'      : 10,
-    # # 'credal_sample_size' : 5,
-    # # 'credal_L'           : 3,
-
-    # # 'dropconnect_prob' : 0.2,
-    # # 'epochs'           : 1,
-    # # 'init_epochs'      : 10,
-    # # 'MC_samples'       : 5,
-
-    # 'laplace_smoothing': 1,
-    # 'split'            : 0.025,
-
-    # }
-
     prams = {
-    'criterion'          : "entropy",
-    'max_features'       : "auto",
-    'max_depth'          : 10,
-    'n_estimators'       : 10,
-    'opt_iterations'     : 3,
-    'epsilon'            : 2,
-    'credal_size'        : 10,
-    'laplace_smoothing'  : 1,
-    'split'              : 0.30,
+    'criterion'        : "entropy",
+    'max_depth'        : 10,
+    'max_features'     : "auto",
+    'n_estimators'     : 3,
+
+    'epsilon'          : 2,
+
+    'credal_size'      : 10,
+    # 'credal_sample_size' : 5,
+    # 'credal_L'           : 3,
+
+    # 'dropconnect_prob' : 0.2,
+    # 'epochs'           : 1,
+    # 'init_epochs'      : 10,
+    # 'MC_samples'       : 5,
+
+    'laplace_smoothing': 1,
+    'split'            : 0.025,
     'run_start'          : 0,
     }
+
+    # prams = {
+    # 'criterion'          : "entropy",
+    # 'max_features'       : "auto",
+    # 'max_depth'          : 10,
+    # 'n_estimators'       : 10,
+    # 'opt_iterations'     : 50,
+    # 'epsilon'            : 2,
+    # 'credal_size'        : 10,
+    # 'laplace_smoothing'  : 1,
+    # 'split'              : 0.30,
+    # 'run_start'          : 0,
+    # }
 
     base_dir = os.path.dirname(os.path.realpath(__file__))
     dir = f"{base_dir[:-12]}/Database/DB_files/job_{job_id}"

@@ -14,7 +14,8 @@ if not os.path.exists(pic_dir):
 
 unc_value_plot = False
 local = False
-color_correct = True
+color_correct = False
+job_id = True
 vertical_plot = False
 single_plot = False
 legend_flag = False
@@ -23,19 +24,20 @@ legend_flag = False
 # data_list  = ["vertebral","breast", "ionosphere", "blod", "QSAR", "wine_qw"] 
 # data_list = ["climate", "parkinsons", "spambase"]
 # data_list = ["climate", "vertebral"]
-data_list = ["parkinsons"]
+data_list = ["vertebral"]
 modes     = "eat"
 
 for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name   = "SK_Random_new_test"
+    run_name   = "Fair_exp"
     run_name2  = "presentation100"
-    plot_name = data + "_RR2"
+    plot_name = data + "_set18VSset23"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND ((run_name='{run_name}' AND (result_type='set20' OR result_type='set21')) OR (run_name='{run_name2}' AND (result_type='bays' OR result_type='set18' OR result_type='set19')))"
-    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
-    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5139 OR id=5193 OR id=5232"
+    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
+    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5362 OR id=5364 OR id=5365"
+    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5360 OR id=5368"
 
     ########################################################################################################################################################
 
@@ -85,6 +87,7 @@ for data in data_list:
     plot_list = []
 
     for job in jobs:
+        # print(">>> ",job)
         dir = job[0]
         if dir[0] == ".":
             dir = base_dir + dir[1:]
@@ -126,6 +129,17 @@ for data in data_list:
             # v_index_e = prams.index(",", v_index_s)
             # max_depth = int(prams[v_index_s+len(search_pram) : v_index_e])
             # legend += " opt: " + str(max_depth)
+
+            # prams = str(job[2])
+            # pram_name = "laplace_smoothing"
+            # search_pram = f"'{pram_name}': "
+            # v_index_s = prams.index(search_pram)
+            # v_index_e = prams.index(",", v_index_s)
+            # max_depth = int(prams[v_index_s+len(search_pram) : v_index_e])
+            # legend += " L " + str(max_depth)
+
+            if job_id:
+                legend += " " + str(job[1])
 
             # get the list of file names
             file_list = []
