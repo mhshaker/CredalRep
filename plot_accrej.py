@@ -13,12 +13,14 @@ if not os.path.exists(pic_dir):
     os.makedirs(pic_dir)
 
 unc_value_plot = False
-local = False
-color_correct = False
-job_id = True
-vertical_plot = False
-single_plot = False
-legend_flag = False
+local          = False
+vertical_plot  = False
+single_plot    = False
+
+color_correct  = False
+job_id         = True
+in_plot_legend = False
+legend_flag    = True
 
 # data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod", "bank", "QSAR", "spambase"] 
 # data_list  = ["vertebral","breast", "ionosphere", "blod", "QSAR", "wine_qw"] 
@@ -31,13 +33,13 @@ for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name   = "Fair_exp"
+    run_name   = "bays_fair"
     run_name2  = "presentation100"
-    plot_name = data + "_set18VSset23"
+    plot_name = data + "_baysFair"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND ((run_name='{run_name}' AND (result_type='set20' OR result_type='set21')) OR (run_name='{run_name2}' AND (result_type='bays' OR result_type='set18' OR result_type='set19')))"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
-    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5362 OR id=5364 OR id=5365"
-    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5360 OR id=5368"
+    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5368 OR id=5369"
+    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5441 OR id=5442 OR id=5385"
 
     ########################################################################################################################################################
 
@@ -171,11 +173,14 @@ for data in data_list:
                 linestyle = '--'
             if "set21" in legend:
                 linestyle = '--'
+            if "set25" in legend:
+                linestyle = '--'
             # if "out" in legend:
             #     linestyle = ':'
             if "bays" in legend:
                 linestyle = ':'
-
+            
+            alpha = 0.8
             if color_correct:
                 color = "black"
                 if "ent" in legend:
@@ -204,8 +209,14 @@ for data in data_list:
                     color = "red"
                 if "set20" in legend:
                     color = "purple"
+                    alpha = 0.3
                 if "set21" in legend:
                     color = "purple"
+                    alpha = 0.3
+                if "set24" in legend:
+                    color = "black"
+                if "set25" in legend:
+                    color = "black"
                 if "out" in legend:
                     color = "orange"
             else:
@@ -224,6 +235,8 @@ for data in data_list:
             legend = legend.replace("set19", "L-C1-Ent")
             legend = legend.replace("set20", "L-C2-GH")
             legend = legend.replace("set21", "L-C2-Ent")
+            legend = legend.replace("set24", "L-C3-GH")
+            legend = legend.replace("set25", "L-C3-Ent")
             legend = legend.replace("gs", "GS")
 
 
@@ -236,6 +249,8 @@ for data in data_list:
                 mode_title = "EU"
             if mode == "t":
                 mode_title = "TU"
+                if "Ent" in legend: # do not plot the S^* for set 19 21 25 as they are the same for Levi GH
+                    continue
             
             if single_plot:
                 legend_list.append(legend + " " + mode_title)
@@ -252,9 +267,12 @@ for data in data_list:
             if single_plot:
                 axs.plot(steps, avg_acc, linestyle=linestyle, color=color)
             else:
-                axs[mode_index].plot(steps, avg_acc, linestyle=linestyle, color=color, label=legend)
-                axs[mode_index].legend() # axs,labels=legend_list, loc="lower center", ncol=6
-                # axs[mode_index].grid(which='minor') # to show grids in the plot
+                axs[mode_index].plot(steps, avg_acc, linestyle=linestyle, color=color, label=legend, alpha=alpha)
+                if in_plot_legend:
+                    handles, labels = axs[mode_index].get_legend_handles_labels()
+                    labels, handles = zip(*sorted(zip(labels, handles), key=lambda t: t[0]))
+                    axs[mode_index].legend(handles, labels)
+
             
 
     if single_plot == False:
@@ -279,8 +297,15 @@ for data in data_list:
     # fig.suptitle(data)
     # with warnings.catch_warnings():
     #     warnings.simplefilter("ignore", category=RuntimeWarning)
+
+
     if legend_flag:
-        fig.legend(axs,labels=legend_list, loc="lower center", ncol=6)
+        # handles, _ = fig.get_legend_handles_labels()
+        # labels, handles = zip(*sorted(zip(legend_list, handles), key=lambda t: t[0]))
+        # print(">>>>",labels)
+        
+        # fig.legend(handles, labels, bbox_to_anchor=(0.9, 1), loc='upper left') # , loc="lower center" , ncol=7
+        fig.legend(labels=legend_list, bbox_to_anchor=(0.9, 1), loc='upper left') # , loc="lower center" , ncol=7
 
     fig.savefig(f"./pic/unc/{plot_name}.png",bbox_inches='tight')
     # fig.close()
