@@ -74,13 +74,13 @@ if __name__ == '__main__':
     runs = 1
     data_name = "Jdata/parkinsons"
     algo = "DF"
-    unc_method = "set23"
+    unc_method = "set24"
     prams = {
     'criterion'        : "entropy",
     'max_depth'        : 10,
     'max_features'     : "auto",
     'n_estimators'     : 3,
-
+    'opt_iterations'   : 10,
     'epsilon'          : 2,
 
     'credal_size'      : 10,
