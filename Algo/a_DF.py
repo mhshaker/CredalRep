@@ -477,6 +477,80 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         # porb_matrix = porb_matrix.transpose([1,0,2]) # convert to the format that uncertainty_set14 uses ## laplace smoothing has no effect on set20
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set19(porb_matrix, likelyhoods, pram["epsilon"])
 
+    elif "set26" == unc_method: # Same as set24 but no clustering
+        sample_acc_list = []
+        credal_prob_matrix = []
+        likelyhoods = []
+        pram_smaple_list = []
+
+        pram_grid = {
+            "max_depth" :        np.arange(1,50),
+            "min_samples_split": np.arange(2,10),
+            "criterion" :        ["gini", "entropy"],
+            "max_features" :     ["auto", "sqrt", "log2"],
+            "n_estimators":      [pram["n_estimators"]]
+        }
+
+        opt = RandomizedSearchCV(estimator=RandomForestClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], random_state=seed)
+        # print(">>> y_train " , np.unique(y_train))
+        opt_result = opt.fit(x_train, y_train)      
+
+        # get ranking and params
+        params_searched = np.array(opt_result.cv_results_["params"])
+        params_rank = np.array(opt_result.cv_results_["rank_test_score"])
+        params_score = np.array(opt_result.cv_results_["mean_test_score"])
+        # sprt based on rankings
+        # sorted_index = np.argsort(params_rank, kind='stable') # sort based on rank
+        # params_searched = params_searched[sorted_index]
+        # params_rank = params_rank[sorted_index]
+        # params_score = params_score[sorted_index]
+        # index = index[0]
+
+        # select top K based on kmeans of 2 clusters, we select the cluster with good results to put in the credal set
+        # kmeans = KMeans(n_clusters=2, random_state=seed).fit(params_score.reshape(-1, 1))
+        # cluster_result = kmeans.labels_
+        # index = np.where(cluster_result == 1)[0][0]
+        # if index == 0:
+        #     index = len(params_score)
+        # params_searched = params_searched[: index]
+        # params_rank = params_rank[: index]
+        # print("cut index ", index)
+        # retrain with top K and get test_prob, likelihood values
+
+        credal_prob_matrix = []
+        likelyhoods = []
+
+        for param in params_searched: # opt_pram_list: 
+            model = None
+            model = RandomForestClassifier(**param,random_state=seed)
+            model.fit(x_train, y_train)
+            
+            # test_prob = model.predict_proba(x_test)
+            # credal_prob_matrix.append(test_prob)
+            # train_prob = model.predict_proba(x_train)
+            # likelyhoods.append(log_loss(y_train,train_prob))
+
+            likelyhoods.append(get_likelyhood(model, x_train, y_train, pram["n_estimators"], pram["laplace_smoothing"]))
+            if credal_prob_matrix == []:
+                credal_prob_matrix = get_prob(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
+            else:
+                credal_prob_matrix = np.concatenate((credal_prob_matrix, get_prob(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])), axis=1)
+            # credal_prob_matrix.append(get_prob(model, x_test, pram["n_estimators"], pram["laplace_smoothing"]))
+
+
+        likelyhoods = np.array(likelyhoods)
+        likelyhoods = likelyhoods.reshape(-1)
+
+        # print("likelyhoods forests ", likelyhoods.shape)
+        likelyhoods = np.exp(-likelyhoods) # convert log likelihood to likelihood
+        likelyhoods = likelyhoods / np.sum(likelyhoods) # normalization of the likelihood
+
+        porb_matrix = np.array(credal_prob_matrix)
+        # porb_matrix = porb_matrix.reshape(porb_matrix.shape[1], -1,porb_matrix.shape[3])
+        # print("------------------------------------")
+        # print("porb_matrix forests ", porb_matrix.shape)
+        # porb_matrix = porb_matrix.transpose([1,0,2]) # convert to the format that uncertainty_set14 uses ## laplace smoothing has no effect on set20
+        total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set18(porb_matrix, likelyhoods, pram["epsilon"])
 
     elif "out.tree" == unc_method:
         porb_matrix = get_prob(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
