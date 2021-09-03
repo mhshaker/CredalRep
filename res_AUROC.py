@@ -16,14 +16,14 @@ local          = False
 job_id         = True
 
 # data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod", "bank", "QSAR", "spambase"] 
-data_list = ["spambase"]
+data_list = ["vertebral"]
 modes     = "eat"
 
 for data in data_list:
     print(f"-------------------------------------------------------------- {data}")
     # prameters ############################################################################################################################################
 
-    run_name   = "ROC_run_test_Bays"
+    run_name   = "new_datasets"
     query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5513 OR id=5514"
 

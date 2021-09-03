@@ -7,10 +7,10 @@ auto_run = False
 data_names     = ["Jdata/vertebral", "Jdata/skin","Jdata/adult"]  
 # data_names     = ["Jdata/spambase"] 
 algos          = ["DF"] # ,"LR"
-modes          = ["bays"] #  "levi.ent", "levi.GH.conv", "levi.ent.conv"  "levi.ent" ["ent_e","ent_a","ent_t", "random"]  # ent_e","ent_a","ent_t  "set14", "set15", "set14.convex", "set15.convex", "ent.levi"
+modes          = ["bays", "set18", "set24"] #  "levi.ent", "levi.GH.conv", "levi.ent.conv"  "levi.ent" ["ent_e","ent_a","ent_t", "random"]  # ent_e","ent_a","ent_t  "set14", "set15", "set14.convex", "set15.convex", "ent.levi"
 # modes          = ["bays","set18", "set19", "set24", "set25","set27","set28"] #  "levi.ent", "levi.GH.conv", "levi.ent.conv"  "levi.ent" ["ent_e","ent_a","ent_t", "random"]  # ent_e","ent_a","ent_t  "set14", "set15", "set14.convex", "set15.convex", "ent.levi"
 task           = "unc"
-runs           = 100
+runs           = 5
 prams = {
 'criterion'          : "entropy",
 'max_features'       : "auto",
@@ -29,7 +29,7 @@ prams = {
 for algo in algos:
     for data_name in data_names:
         for mode in modes:
-            run_name       = "ROC_run_test_Bays" #f"{mode}_{algo}" + "noctua_test" # if you want a specific name give it here
+            run_name       = "new_datasets" #f"{mode}_{algo}" + "noctua_test" # if you want a specific name give it here
             description    = "acc_hist"
 
             mydb = db.connect(host="131.234.250.119", user="noctua", passwd="uncertainty", database="uncertainty")

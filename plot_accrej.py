@@ -15,7 +15,7 @@ if not os.path.exists(pic_dir):
 unc_value_plot = False
 local          = False
 vertical_plot  = False
-single_plot    = True
+single_plot    = False
 
 color_correct  = False
 job_id         = True
@@ -26,20 +26,18 @@ legend_flag    = True
 # data_list  = ["vertebral","breast", "ionosphere", "blod", "QSAR", "wine_qw"] 
 # data_list = ["climate", "parkinsons", "spambase"]
 # data_list = ["climate", "vertebral"]
-data_list = ["climate"]
+data_list = ["vertebral"]
 modes     = "eat"
 
 for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name   = "set27_main"
-    run_name2  = "presentation100"
-    plot_name = data + "_Single"
-    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND ((run_name='{run_name}' AND (result_type='set20' OR result_type='set21')) OR (run_name='{run_name2}' AND (result_type='bays' OR result_type='set18' OR result_type='set19')))"
-    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
+    run_name   = "new_datasets"
+    plot_name = data + "_run5"
+    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5368 OR id=5369"
-    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5522"
+    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5522"
 
     ########################################################################################################################################################
 
@@ -74,7 +72,7 @@ for data in data_list:
             fig.set_figwidth(15)
     legend_list = []
     
-
+    uni_y_range = [100, -100] # to be changed by the real min and max of the range
 
 
     # get input from command line
@@ -268,12 +266,20 @@ for data in data_list:
                 axs.plot(steps, avg_acc, linestyle=linestyle, color=color)
             else:
                 axs[mode_index].plot(steps, avg_acc, linestyle=linestyle, color=color, label=legend, alpha=alpha)
+                
+                y_range = axs[mode_index].get_ylim() # code to find the min and max of y axis range
+                if y_range[0] < uni_y_range[0]:
+                    uni_y_range[0] = y_range[0]
+                if y_range[1] > uni_y_range[1]:
+                    uni_y_range[1] = y_range[1]
+
                 if in_plot_legend:
                     handles, labels = axs[mode_index].get_legend_handles_labels()
                     labels, handles = zip(*sorted(zip(labels, handles), key=lambda t: t[0]))
                     axs[mode_index].legend(handles, labels)
 
-            
+    for mode_index, mode in enumerate(modes): # uniform y axis along all plots
+        axs[mode_index].axis(ymin=uni_y_range[0],ymax=uni_y_range[1])
 
     if single_plot == False:
         acc_lable_flag = True
