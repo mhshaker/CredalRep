@@ -1335,11 +1335,22 @@ def accuracy_rejection2(predictions_list, labels_list, uncertainty_list, log=Fal
 
 			accuracy.append(acc)
 			rejection.append(rej)
-		accuracy_list.append(accuracy)
+		accuracy_list.append(np.array(accuracy))
 		reject_list.append(rejection)
 
+	# print(">>>>>> ", reject_list)
+
+	min_rejection_len = 999999999
+	for rejection in reject_list:
+		if len(rejection) < min_rejection_len:
+			min_rejection_len = len(rejection)
+
+	for i, (rejection, accuracy) in enumerate(zip(reject_list,accuracy_list)):
+		reject_list[i] = rejection[:min_rejection_len]
+		accuracy_list[i] = accuracy[:min_rejection_len]
+
 	accuracy_list = np.array(accuracy_list)
-	reject_list = np.array(reject_list)
+	reject_list = np.array(reject_list, dtype=float)
 		
 	with warnings.catch_warnings():
 		warnings.simplefilter("ignore", category=RuntimeWarning)

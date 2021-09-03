@@ -4,13 +4,11 @@ import os
 auto_run = False
 
 # data_names     = ["Jdata/parkinsons", "Jdata/vertebral","Jdata/ionosphere", "Jdata/climate", "Jdata/blod", "Jdata/breast","Jdata/bank", "Jdata/QSAR", "Jdata/spambase"] # 
-data_names     = ["Jdata/vertebral", "Jdata/skin","Jdata/adult"]  
-# data_names     = ["Jdata/spambase"] 
+data_names     = ["Jdata/parkinsons"] 
 algos          = ["DF"] # ,"LR"
-modes          = ["bays", "set18", "set24"] #  "levi.ent", "levi.GH.conv", "levi.ent.conv"  "levi.ent" ["ent_e","ent_a","ent_t", "random"]  # ent_e","ent_a","ent_t  "set14", "set15", "set14.convex", "set15.convex", "ent.levi"
-# modes          = ["bays","set18", "set19", "set24", "set25","set27","set28"] #  "levi.ent", "levi.GH.conv", "levi.ent.conv"  "levi.ent" ["ent_e","ent_a","ent_t", "random"]  # ent_e","ent_a","ent_t  "set14", "set15", "set14.convex", "set15.convex", "ent.levi"
+modes          = ["bays", "set18", "set24"]
 task           = "unc"
-runs           = 5
+runs           = 20
 prams = {
 'criterion'          : "entropy",
 'max_features'       : "auto",
@@ -23,13 +21,14 @@ prams = {
 'laplace_smoothing'  : 1,
 'split'              : 0.30,
 'run_start'          : 0,
+'cv'                 : 0
 }
 
 
 for algo in algos:
     for data_name in data_names:
         for mode in modes:
-            run_name       = "new_datasets" #f"{mode}_{algo}" + "noctua_test" # if you want a specific name give it here
+            run_name       = "roc_test_run20vsCV5" #f"{mode}_{algo}" + "noctua_test" # if you want a specific name give it here
             description    = "acc_hist"
 
             mydb = db.connect(host="131.234.250.119", user="noctua", passwd="uncertainty", database="uncertainty")

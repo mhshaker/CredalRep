@@ -12,35 +12,6 @@ from sklearn.model_selection import RandomizedSearchCV
 from sklearn.cluster import KMeans
 
 
-def random_pram_sample(pram_dict): # for random hyper pram optimization
-    sample = {}
-    for pram in pram_dict:
-        value = random.choice(pram_dict[pram])
-        sample[pram] = value
-    return sample
-
-
-def sample_loss(d_pram, pram, x_train, y_train, x_test, y_test, seed):
-    model = None
-    model = RandomForestClassifier(bootstrap=True,
-        n_estimators=d_pram["n_estimators"],
-        criterion=d_pram['criterion'],
-        max_depth=pram["max_depth"],
-        max_features= d_pram['max_features'],
-        min_samples_split= pram['min_samples_split'],
-        random_state=seed,
-        verbose=0,
-        warm_start=False)
-
-    model.fit(x_train, y_train)
-    sample_acc = cross_val_score(model, X=x_train, y=y_train, scoring='roc_auc', cv=3).mean() # model.score(x_test, y_test)
-    test_prob = model.predict_proba(x_test)
-    train_prob = model.predict_proba(x_train)
-    likelyhood = log_loss(y_train,train_prob)
-
-    return sample_acc, test_prob, likelyhood
-
-
 def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=True, opt_pram_list=None):
     np.random.seed(seed)
     us = unc_method.split('_')
@@ -48,15 +19,35 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
     if len(us) > 1:
         unc_mode = us[1] # spliting the active selection mode (_a _e _t) from the unc method because DF dose not work with that
 
+    pram_grid = {
+        "max_depth" :        np.arange(1,50),
+        # "min_samples_split": np.arange(2,10),
+        # "criterion" :        ["gini", "entropy"],
+        # "max_features" :     ["auto", "sqrt", "log2"],
+        # "n_estimators":      [pram["n_estimators"]]
+    }
+
+    opt = RandomizedSearchCV(estimator=RandomForestClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], random_state=seed)
+    opt_result = opt.fit(x_train, y_train)      
+
+    params_searched = np.array(opt_result.cv_results_["params"])
+    params_rank = np.array(opt_result.cv_results_["rank_test_score"])
+
+    # sprt based on rankings
+    sorted_index = np.argsort(params_rank, kind='stable') # sort based on rank
+    params_searched = params_searched[sorted_index]
+
     model = None
-    model = RandomForestClassifier(bootstrap=True,
-        criterion=pram['criterion'],
-        max_depth=pram["max_depth"],
-        max_features= pram["max_features"],
-        n_estimators=pram["n_estimator_predict"],
-        random_state=seed,
-        verbose=0,
-        warm_start=False)
+    # model = RandomForestClassifier(bootstrap=True,
+    #     criterion=pram['criterion'],
+    #     max_depth=pram["max_depth"],
+    #     max_features= pram["max_features"],
+    #     n_estimators=pram["n_estimator_predict"],
+    #     random_state=seed,
+    #     verbose=0,
+    #     warm_start=False)
+    model = RandomForestClassifier(**params_searched[0],random_state=seed)
+
     model.fit(x_train, y_train)
     if predict:
         prediction = model.predict(x_test)
@@ -136,14 +127,6 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         likelyhoods = []
         pram_smaple_list = []
 
-        pram_grid = {
-            "max_depth" :        np.arange(1,50),
-            "min_samples_split": np.arange(2,10),
-            "criterion" :        ["gini", "entropy"],
-            "max_features" :     ["auto", "sqrt", "log2"],
-            "n_estimators":      [pram["n_estimators"]]
-        }
-
         opt = RandomizedSearchCV(estimator=RandomForestClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], random_state=seed)
         # print(">>> y_train " , np.unique(y_train))
         opt_result = opt.fit(x_train, y_train)      
@@ -195,14 +178,6 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         likelyhoods = []
         pram_smaple_list = []
 
-        pram_grid = {
-            "max_depth" :        np.arange(1,50),
-            "min_samples_split": np.arange(2,10),
-            "criterion" :        ["gini", "entropy"],
-            "max_features" :     ["auto", "sqrt", "log2"],
-            "n_estimators":      [pram["n_estimators"]]
-        }
-
         opt = RandomizedSearchCV(estimator=RandomForestClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], random_state=seed)
         # print(">>> y_train " , np.unique(y_train))
         opt_result = opt.fit(x_train, y_train)      
@@ -250,14 +225,6 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set19(porb_matrix, likelyhoods, pram["epsilon"])
 
     elif "set22" == unc_method: # set22 [Bays opt] is about credal set with different hyper prameters. We get porb_matrix from different forests but use the same set18 method to have convexcity
-
-        pram_grid = {
-            "max_depth" :        np.arange(1,50),
-            "min_samples_split": np.arange(2,10),
-            "criterion" :        ["gini", "entropy"],
-            "max_features" :     ["auto", "sqrt", "log2"],
-            "n_estimators":      [pram["n_estimators"]]
-        }
 
         opt = BayesSearchCV(estimator=RandomForestClassifier(), search_spaces=pram_grid, n_iter=pram["opt_iterations"], random_state=seed)
         print(">>> y_train " , np.unique(y_train))
@@ -332,14 +299,6 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         credal_prob_matrix = []
         likelyhoods = []
         pram_smaple_list = []
-
-        pram_grid = {
-            "max_depth" :        np.arange(1,50),
-            "min_samples_split": np.arange(2,10),
-            "criterion" :        ["gini", "entropy"],
-            "max_features" :     ["auto", "sqrt", "log2"],
-            "n_estimators":      [pram["n_estimators"]]
-        }
 
         opt = RandomizedSearchCV(estimator=RandomForestClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], random_state=seed)
         # print(">>> y_train " , np.unique(y_train))
@@ -435,14 +394,6 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         likelyhoods = []
         pram_smaple_list = []
 
-        pram_grid = {
-            "max_depth" :        np.arange(1,50),
-            "min_samples_split": np.arange(2,10),
-            "criterion" :        ["gini", "entropy"],
-            "max_features" :     ["auto", "sqrt", "log2"],
-            "n_estimators":      [pram["n_estimators"]]
-        }
-
         opt = RandomizedSearchCV(estimator=RandomForestClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], random_state=seed)
         # print(">>> y_train " , np.unique(y_train))
         opt_result = opt.fit(x_train, y_train)      
@@ -510,14 +461,6 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         likelyhoods = []
         pram_smaple_list = []
 
-        pram_grid = {
-            "max_depth" :        np.arange(1,50),
-            "min_samples_split": np.arange(2,10),
-            "criterion" :        ["gini", "entropy"],
-            "max_features" :     ["auto", "sqrt", "log2"],
-            "n_estimators":      [pram["n_estimators"]]
-        }
-
         opt = RandomizedSearchCV(estimator=RandomForestClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], random_state=seed)
         # print(">>> y_train " , np.unique(y_train))
         opt_result = opt.fit(x_train, y_train)      
@@ -567,14 +510,6 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         credal_prob_matrix = []
         likelyhoods = []
         pram_smaple_list = []
-
-        pram_grid = {
-            "max_depth" :        np.arange(1,50),
-            # "min_samples_split": np.arange(2,10),
-            # "criterion" :        ["gini", "entropy"],
-            # "max_features" :     ["auto", "sqrt", "log2"],
-            # "n_estimators":      [pram["n_estimators"]]
-        }
 
         opt = RandomizedSearchCV(estimator=RandomForestClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], random_state=seed, cv=3)
         # print(">>> y_train " , np.unique(y_train))
@@ -651,14 +586,6 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         likelyhoods = []
         pram_smaple_list = []
 
-        pram_grid = {
-            "max_depth" :        np.arange(1,50),
-            # "min_samples_split": np.arange(2,10),
-            # "criterion" :        ["gini", "entropy"],
-            # "max_features" :     ["auto", "sqrt", "log2"],
-            # "n_estimators":      [pram["n_estimators"]]
-        }
-
         opt = RandomizedSearchCV(estimator=RandomForestClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], random_state=seed, cv=3)
         # print(">>> y_train " , np.unique(y_train))
         opt_result = opt.fit(x_train, y_train)      
@@ -726,14 +653,6 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         likelyhoods = []
         credal_prob_matrix_f = []
         likelyhoods_f = []
-
-        pram_grid = {
-            "max_depth" :        np.arange(1,50),
-            "min_samples_split": np.arange(2,10),
-            "criterion" :        ["gini", "entropy"],
-            "max_features" :     ["auto", "sqrt", "log2"],
-            "n_estimators":      [pram["n_estimators"]]
-        }
 
         opt = RandomizedSearchCV(estimator=RandomForestClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], random_state=seed)
         opt_result = opt.fit(x_train, y_train)      

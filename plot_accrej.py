@@ -26,18 +26,17 @@ legend_flag    = True
 # data_list  = ["vertebral","breast", "ionosphere", "blod", "QSAR", "wine_qw"] 
 # data_list = ["climate", "parkinsons", "spambase"]
 # data_list = ["climate", "vertebral"]
-data_list = ["vertebral"]
+data_list = ["parkinsons"]
 modes     = "eat"
 
 for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name   = "new_datasets"
-    plot_name = data + "_run5"
+    run_name   = "roc_test_run20vsCV5"
+    plot_name = data + "_roc_test_run20vsCV5"
     query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
-    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5368 OR id=5369"
-    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5522"
+    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5552"
 
     ########################################################################################################################################################
 
@@ -266,7 +265,7 @@ for data in data_list:
                 axs.plot(steps, avg_acc, linestyle=linestyle, color=color)
             else:
                 axs[mode_index].plot(steps, avg_acc, linestyle=linestyle, color=color, label=legend, alpha=alpha)
-                
+
                 y_range = axs[mode_index].get_ylim() # code to find the min and max of y axis range
                 if y_range[0] < uni_y_range[0]:
                     uni_y_range[0] = y_range[0]

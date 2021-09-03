@@ -105,7 +105,7 @@ def uncertainty_quantification_cv(seed, x_train, x_test, y_train, y_test, prams,
     e_time = time.time()
     run_time = int(e_time - s_time)
 
-    print(f"{seed} :{run_time}s")
+    print(f"cv {seed} :{run_time}s")
 
 
 if __name__ == '__main__':
@@ -113,43 +113,21 @@ if __name__ == '__main__':
     job_id = 0 # for developement
     seed   = 1
     runs = 1
-    data_name = "Jdata/vertebral"
+    data_name = "Jdata/parkinsons"
     algo = "DF"
-    unc_method = "set24mix"
-    # prams = {
-    # 'criterion'        : "entropy",
-    # 'max_depth'        : 10,
-    # 'max_features'     : "auto",
-    # 'n_estimators'     : 3,
-    # 'opt_iterations'   : 50,
-    # 'epsilon'          : 2,
-    # 'n_estimator_predict': 10,
-
-    # 'credal_size'      : 10,
-    # # 'credal_sample_size' : 5,
-    # # 'credal_L'           : 3,
-
-    # # 'dropconnect_prob' : 0.2,
-    # # 'epochs'           : 1,
-    # # 'init_epochs'      : 10,
-    # # 'MC_samples'       : 5,
-
-    # 'laplace_smoothing': 1,
-    # 'split'            : 0.025,
-    # 'run_start'          : 0,
-    # }
+    unc_method = "bays"
 
     prams = {
     'criterion'          : "entropy",
     'max_features'       : "auto",
     'max_depth'          : 10,
-    'n_estimators'       : 10,
-    'n_estimator_predict': 10,
+    'n_estimators'       : 10, # 3
+    'n_estimator_predict': 10, # 3
     'opt_iterations'     : 20,
     'epsilon'            : 2,
     'credal_size'        : 999,
     'laplace_smoothing'  : 1,
-    'split'              : 0.30,
+    'split'              : 0.30, # 0.025
     'run_start'          : 0,
     'cv'                 : 10
     }
@@ -200,50 +178,24 @@ if __name__ == '__main__':
     else:
         features, target = dp.load_data(data_name)
 
-        # hyper param opt before parallel runs
-        opt_pram_list = None
-        # if unc_method == "set22":
-        #     pram_grid = {
-        #         "max_depth" :        np.arange(1,50),
-        #         "min_samples_split": np.arange(2,10),
-        #         "criterion" :        ["gini", "entropy"],
-        #         "max_features" :     ["auto", "sqrt", "log2"],
-        #         "n_estimators":      [prams["n_estimators"]]
-        #     }
-
-        #     opt = BayesSearchCV(estimator=RandomForestClassifier(random_state=seed), search_spaces=pram_grid, n_iter=prams["opt_iterations"], random_state=seed)
-        #     opt_result = opt.fit(features, target)  # this is on all the data which is not the best practice    
-
-        #     # get ranking and params
-        #     params_searched = np.array(opt_result.cv_results_["params"])
-        #     params_rank = np.array(opt_result.cv_results_["rank_test_score"])
-        #     # sprt based on rankings
-        #     sorted_index = np.argsort(params_rank, kind='stable') # sort based on rank
-        #     params_searched = params_searched[sorted_index]
-        #     params_rank = params_rank[sorted_index]
-        #     # select top K
-        #     opt_pram_list = params_searched[: prams["credal_size"]]
-        #     params_rank = params_rank[: prams["credal_size"]]
-        #     # retrain with top K and get test_prob, likelihood values
-
-
         print(f"job_id {job_id} start")
         start = prams["run_start"]
         ray.init(num_cpus=8)
         ray_array = []
         if prams["cv"] == 0:
             for seed in range(start,runs+start):
-                ray_array.append(uncertainty_quantification.remote(seed, features, target, prams, unc_method, algo, dir, opt_pram_list))
+                ray_array.append(uncertainty_quantification.remote(seed, features, target, prams, unc_method, algo, dir))
         else:
             cv_outer = KFold(n_splits=prams["cv"], shuffle=True, random_state=1)
-            for train_ix, test_ix in cv_outer.split(X):
+            seed = start
+            for train_ix, test_ix in cv_outer.split(features):
                 x_train, x_test = features[train_ix, :], features[test_ix, :]
                 y_train, y_test = target[train_ix], target[test_ix]
-                ray_array.append(uncertainty_quantification.remote(seed, x_train, x_test, y_train, y_test, prams, unc_method, algo, dir, opt_pram_list))
+                ray_array.append(uncertainty_quantification_cv.remote(seed, x_train, x_test, y_train, y_test, prams, unc_method, algo, dir))
+                seed += 1
 
         res_array = ray.get(ray_array)
 
-        # uncertainty_quantification(seed, features, target, prams, unc_method, algo, dir, opt_pram_list=opt_pram_list)
 
     if len(sys.argv) > 1:
         mycursor.execute(f"UPDATE experiments SET status='done' Where id={job_id}")
