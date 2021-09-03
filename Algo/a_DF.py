@@ -32,10 +32,15 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
 
     params_searched = np.array(opt_result.cv_results_["params"])
     params_rank = np.array(opt_result.cv_results_["rank_test_score"])
+    params_score_mean = np.array(opt_result.cv_results_["mean_test_score"])
+    params_score_std  = np.array(opt_result.cv_results_["std_test_score"])
 
     # sprt based on rankings
     sorted_index = np.argsort(params_rank, kind='stable') # sort based on rank
     params_searched = params_searched[sorted_index]
+    params_rank = params_rank[sorted_index]
+    params_score_mean = params_score_mean[sorted_index]
+    params_score_std = params_score_std[sorted_index]
 
     model = None
     # model = RandomForestClassifier(bootstrap=True,
@@ -127,21 +132,6 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         likelyhoods = []
         pram_smaple_list = []
 
-        opt = RandomizedSearchCV(estimator=RandomForestClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], random_state=seed)
-        # print(">>> y_train " , np.unique(y_train))
-        opt_result = opt.fit(x_train, y_train)      
-
-        # get ranking and params
-        params_searched = np.array(opt_result.cv_results_["params"])
-        params_rank = np.array(opt_result.cv_results_["rank_test_score"])
-        params_score = np.array(opt_result.cv_results_["mean_test_score"])
-        # sprt based on rankings
-        sorted_index = np.argsort(params_rank, kind='stable') # sort based on rank
-        params_searched = params_searched[sorted_index]
-        params_rank = params_rank[sorted_index]
-        params_score = params_score[sorted_index]
-        # index = index[0]
-
         # select top K based on kmeans of 2 clusters, we select the cluster with good results to put in the credal set
         kmeans = KMeans(n_clusters=2, random_state=seed).fit(params_score.reshape(-1, 1))
         cluster_result = kmeans.labels_
@@ -178,21 +168,6 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         likelyhoods = []
         pram_smaple_list = []
 
-        opt = RandomizedSearchCV(estimator=RandomForestClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], random_state=seed)
-        # print(">>> y_train " , np.unique(y_train))
-        opt_result = opt.fit(x_train, y_train)      
-
-        # get ranking and params
-        params_searched = np.array(opt_result.cv_results_["params"])
-        params_rank = np.array(opt_result.cv_results_["rank_test_score"])
-        params_score = np.array(opt_result.cv_results_["mean_test_score"])
-        # sprt based on rankings
-        sorted_index = np.argsort(params_rank, kind='stable') # sort based on rank
-        params_searched = params_searched[sorted_index]
-        params_rank = params_rank[sorted_index]
-        params_score = params_score[sorted_index]
-        # index = index[0]
-
         # select top K based on kmeans of 2 clusters, we select the cluster with good results to put in the credal set
         kmeans = KMeans(n_clusters=2, random_state=seed).fit(params_score.reshape(-1, 1))
         cluster_result = kmeans.labels_
@@ -226,17 +201,6 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
 
     elif "set22" == unc_method: # set22 [Bays opt] is about credal set with different hyper prameters. We get porb_matrix from different forests but use the same set18 method to have convexcity
 
-        opt = BayesSearchCV(estimator=RandomForestClassifier(), search_spaces=pram_grid, n_iter=pram["opt_iterations"], random_state=seed)
-        print(">>> y_train " , np.unique(y_train))
-        opt_result = opt.fit(x_train, y_train)      
-
-        # get ranking and params
-        params_searched = np.array(opt_result.cv_results_["params"])
-        params_rank = np.array(opt_result.cv_results_["rank_test_score"])
-        # sprt based on rankings
-        sorted_index = np.argsort(params_rank, kind='stable') # sort based on rank
-        params_searched = params_searched[sorted_index]
-        params_rank = params_rank[sorted_index]
         # select top K
         params_searched = params_searched[: pram["credal_size"]]
         params_rank = params_rank[: pram["credal_size"]]
@@ -300,44 +264,6 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         likelyhoods = []
         pram_smaple_list = []
 
-        opt = RandomizedSearchCV(estimator=RandomForestClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], random_state=seed)
-        # print(">>> y_train " , np.unique(y_train))
-        opt_result = opt.fit(x_train, y_train)      
-
-        # # get ranking and params
-        # params_searched = np.array(opt_result.cv_results_["params"])
-        # params_rank = np.array(opt_result.cv_results_["rank_test_score"])
-        # params_score = np.array(opt_result.cv_results_["mean_test_score"])
-        # # sprt based on rankings
-        # sorted_index = np.argsort(params_rank, kind='stable') # sort based on rank
-        # params_searched = params_searched[sorted_index]
-        # params_rank = params_rank[sorted_index]
-        # params_score = params_score[sorted_index]
-        # # index = index[0]
-
-        # # select top K based on kmeans of 2 clusters, we select the cluster with good results to put in the credal set
-        # kmeans = KMeans(n_clusters=2, random_state=seed).fit(params_score.reshape(-1, 1))
-        # cluster_result = kmeans.labels_
-        # index = np.where(cluster_result == 1)[0][0]
-        # if index == 0:
-        #     index = len(params_score)
-        # get ranking and params
-
-        params_searched = np.array(opt_result.cv_results_["params"])
-        params_rank = np.array(opt_result.cv_results_["rank_test_score"])
-        params_score_mean = np.array(opt_result.cv_results_["mean_test_score"])
-        params_score_std  = np.array(opt_result.cv_results_["std_test_score"])
-
-        # sprt based on rankings
-        sorted_index = np.argsort(params_rank, kind='stable') # sort based on rank
-        params_searched = params_searched[sorted_index]
-        params_rank = params_rank[sorted_index]
-        params_score_mean = params_score_mean[sorted_index]
-        params_score_std = params_score_std[sorted_index]
-        # index = index[0]
-        # print(params_score_mean)
-        # print(params_score_std)
-
         # Confidance interval
         conf_int = params_score_mean[0] -  1 * params_score_std[0] # include SD which is 99%
         # print("conf_int ", conf_int)
@@ -394,21 +320,6 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         likelyhoods = []
         pram_smaple_list = []
 
-        opt = RandomizedSearchCV(estimator=RandomForestClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], random_state=seed)
-        # print(">>> y_train " , np.unique(y_train))
-        opt_result = opt.fit(x_train, y_train)      
-
-        # get ranking and params
-        params_searched = np.array(opt_result.cv_results_["params"])
-        params_rank = np.array(opt_result.cv_results_["rank_test_score"])
-        params_score = np.array(opt_result.cv_results_["mean_test_score"])
-        # sprt based on rankings
-        sorted_index = np.argsort(params_rank, kind='stable') # sort based on rank
-        params_searched = params_searched[sorted_index]
-        params_rank = params_rank[sorted_index]
-        params_score = params_score[sorted_index]
-        # index = index[0]
-
         # select top K based on kmeans of 2 clusters, we select the cluster with good results to put in the credal set
         kmeans = KMeans(n_clusters=2, random_state=seed).fit(params_score.reshape(-1, 1))
         cluster_result = kmeans.labels_
@@ -461,15 +372,6 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         likelyhoods = []
         pram_smaple_list = []
 
-        opt = RandomizedSearchCV(estimator=RandomForestClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], random_state=seed)
-        # print(">>> y_train " , np.unique(y_train))
-        opt_result = opt.fit(x_train, y_train)      
-
-        # get ranking and params
-        params_searched = np.array(opt_result.cv_results_["params"])
-        params_rank = np.array(opt_result.cv_results_["rank_test_score"])
-        params_score = np.array(opt_result.cv_results_["mean_test_score"])
-
         credal_prob_matrix = []
         likelyhoods = []
 
@@ -510,26 +412,6 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         credal_prob_matrix = []
         likelyhoods = []
         pram_smaple_list = []
-
-        opt = RandomizedSearchCV(estimator=RandomForestClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], random_state=seed, cv=3)
-        # print(">>> y_train " , np.unique(y_train))
-        opt_result = opt.fit(x_train, y_train)      
-
-        # get ranking and params
-        params_searched = np.array(opt_result.cv_results_["params"])
-        params_rank = np.array(opt_result.cv_results_["rank_test_score"])
-        params_score_mean = np.array(opt_result.cv_results_["mean_test_score"])
-        params_score_std  = np.array(opt_result.cv_results_["std_test_score"])
-
-        # sprt based on rankings
-        sorted_index = np.argsort(params_rank, kind='stable') # sort based on rank
-        params_searched = params_searched[sorted_index]
-        params_rank = params_rank[sorted_index]
-        params_score_mean = params_score_mean[sorted_index]
-        params_score_std = params_score_std[sorted_index]
-        # index = index[0]
-        # print(params_score_mean)
-        # print(params_score_std)
 
         # Confidance interval
         conf_int = params_score_mean[0] -  1 * params_score_std[0] # include SD which is 99%
@@ -586,26 +468,6 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         likelyhoods = []
         pram_smaple_list = []
 
-        opt = RandomizedSearchCV(estimator=RandomForestClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], random_state=seed, cv=3)
-        # print(">>> y_train " , np.unique(y_train))
-        opt_result = opt.fit(x_train, y_train)      
-
-        # get ranking and params
-        params_searched = np.array(opt_result.cv_results_["params"])
-        params_rank = np.array(opt_result.cv_results_["rank_test_score"])
-        params_score_mean = np.array(opt_result.cv_results_["mean_test_score"])
-        params_score_std  = np.array(opt_result.cv_results_["std_test_score"])
-
-        # sprt based on rankings
-        sorted_index = np.argsort(params_rank, kind='stable') # sort based on rank
-        params_searched = params_searched[sorted_index]
-        params_rank = params_rank[sorted_index]
-        params_score_mean = params_score_mean[sorted_index]
-        params_score_std = params_score_std[sorted_index]
-        # index = index[0]
-        # print(params_score_mean)
-        # print(params_score_std)
-
         # Confidance interval
         conf_int = params_score_mean[0] -  1 * params_score_std[0] # include SD which is 99%
         index = len(params_score_mean) - 1
@@ -653,21 +515,6 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         likelyhoods = []
         credal_prob_matrix_f = []
         likelyhoods_f = []
-
-        opt = RandomizedSearchCV(estimator=RandomForestClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], random_state=seed)
-        opt_result = opt.fit(x_train, y_train)      
-        
-        params_searched = np.array(opt_result.cv_results_["params"])
-        params_rank = np.array(opt_result.cv_results_["rank_test_score"])
-        params_score_mean = np.array(opt_result.cv_results_["mean_test_score"])
-        params_score_std  = np.array(opt_result.cv_results_["std_test_score"])
-
-        # sprt based on rankings
-        sorted_index = np.argsort(params_rank, kind='stable') # sort based on rank
-        params_searched = params_searched[sorted_index]
-        params_rank = params_rank[sorted_index]
-        params_score_mean = params_score_mean[sorted_index]
-        params_score_std = params_score_std[sorted_index]
 
         # Confidance interval
         conf_int = params_score_mean[0] -  1 * params_score_std[0] # include SD which is 99%
