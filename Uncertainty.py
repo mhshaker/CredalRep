@@ -11,6 +11,7 @@ import Algo.a_DF as df
 import mysql.connector as db
 import sklearn
 import ray
+from sklearn.model_selection import KFold
 
 from skopt import BayesSearchCV
 from sklearn.ensemble import RandomForestClassifier
@@ -37,6 +38,46 @@ def uncertainty_quantification(seed, features, target, prams, mode, algo, dir, o
         
     # print(f"run {seed} score: train {model.score(x_train, y_train):0.2f} | test {model.score(x_test, y_test):0.2f}")
 
+    # check for directories
+    prob_dir = f"{dir}/prob"
+    p_dir = f"{dir}/p"
+    t_dir = f"{dir}/t"
+    e_dir = f"{dir}/e"
+    a_dir = f"{dir}/a"
+    l_dir = f"{dir}/l"
+    
+    if not os.path.exists(p_dir):
+        os.makedirs(prob_dir)
+        os.makedirs(p_dir)
+        os.makedirs(t_dir)
+        os.makedirs(e_dir)
+        os.makedirs(a_dir)
+        os.makedirs(l_dir)
+
+    # save the results
+    np.savetxt(f"{prob_dir}/{seed}.txt", probs)
+    np.savetxt(f"{p_dir}/{seed}.txt", predictions.astype(int))
+    np.savetxt(f"{t_dir}/{seed}.txt", t_unc)
+    np.savetxt(f"{e_dir}/{seed}.txt", e_unc)
+    np.savetxt(f"{a_dir}/{seed}.txt", a_unc)
+    np.savetxt(f"{l_dir}/{seed}.txt", y_test.astype(int))
+
+    e_time = time.time()
+    run_time = int(e_time - s_time)
+
+    print(f"{seed} :{run_time}s")
+
+@ray.remote
+def uncertainty_quantification_cv(seed, x_train, x_test, y_train, y_test, prams, mode, algo, dir, opt_pram_list=None):
+    s_time = time.time()
+    
+    if algo == "DF":
+        predictions , t_unc, e_unc, a_unc, model = df.DF_run(x_train, x_test, y_train, y_test, prams, unc_method, seed, opt_pram_list=opt_pram_list)
+        probs = model.predict_proba(x_test)
+    else:
+        print("[ERORR] Undefined Algo")
+        exit()
+        
     # check for directories
     prob_dir = f"{dir}/prob"
     p_dir = f"{dir}/p"
@@ -110,6 +151,7 @@ if __name__ == '__main__':
     'laplace_smoothing'  : 1,
     'split'              : 0.30,
     'run_start'          : 0,
+    'cv'                 : 10
     }
 
     base_dir = os.path.dirname(os.path.realpath(__file__))
@@ -189,8 +231,16 @@ if __name__ == '__main__':
         start = prams["run_start"]
         ray.init(num_cpus=8)
         ray_array = []
-        for seed in range(start,runs+start):
-            ray_array.append(uncertainty_quantification.remote(seed, features, target, prams, unc_method, algo, dir, opt_pram_list))
+        if prams["cv"] == 0:
+            for seed in range(start,runs+start):
+                ray_array.append(uncertainty_quantification.remote(seed, features, target, prams, unc_method, algo, dir, opt_pram_list))
+        else:
+            cv_outer = KFold(n_splits=prams["cv"], shuffle=True, random_state=1)
+            for train_ix, test_ix in cv_outer.split(X):
+                x_train, x_test = features[train_ix, :], features[test_ix, :]
+                y_train, y_test = target[train_ix], target[test_ix]
+                ray_array.append(uncertainty_quantification.remote(seed, x_train, x_test, y_train, y_test, prams, unc_method, algo, dir, opt_pram_list))
+
         res_array = ray.get(ray_array)
 
         # uncertainty_quantification(seed, features, target, prams, unc_method, algo, dir, opt_pram_list=opt_pram_list)
