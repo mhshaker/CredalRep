@@ -1437,29 +1437,39 @@ def accuracy_rejection(predictions_list, labels_list, uncertainty_list, unc_valu
 def roc(probs_list, predictions_list, labels_list, uncertainty_list, unc_value=False, log=False): # 2D inputs for average plot -> D1: runs D2: uncertainty data
 
 	area_list = []
-	accuracy_list = []
-	
-	steps = np.array(list(range(90)))
-	if unc_value:
-		steps = uncertainty_list
 
+	for predictions, uncertainty, labels in zip(predictions_list, uncertainty_list, labels_list):
 
-	for probs, predictions, uncertainty, labels in zip(probs_list, predictions_list, uncertainty_list, labels_list): # for each run
-
-		probs = np.array(probs)
 		predictions = np.array(predictions)
 		uncertainty = np.array(uncertainty)
-		labels = np.array(labels)
 
-		fpr, tpr, thresholds = metrics.roc_curve(labels, uncertainty)
+		correctness_map = []
+		for x, y in zip(predictions, labels):
+			if x == y:
+				correctness_map.append(0) 
+			else:
+				correctness_map.append(1)
+		correctness_map = np.array(correctness_map)
 
-		area = metrics.auc(tpr, fpr)
+		# probs = np.array(probs)
+		# predictions = np.array(predictions)
+		# uncertainty = np.array(uncertainty)
+		# labels = np.array(labels)
+
+		# fpr, tpr, thresholds = metrics.roc_curve(correctness_map, uncertainty)
+		# area = metrics.auc(tpr, fpr)
+		if len(np.unique(correctness_map)) == 1:
+			# print(correctness_map)
+			# print("Skipping")
+			continue
+		area = metrics.roc_auc_score(correctness_map, uncertainty)
 		area_list.append(area)
 
 	area_list = np.array(area_list)
-	avg_area = area_list.mean()
+	AUROC_mean = area_list.mean()
+	AUROC_std  = area_list.std()
 
-	return avg_area
+	return AUROC_mean, AUROC_std * 2
 
 def uncertainty_correlation(predictions_list, labels_list, uncertainty_list, log=False): # more accurate for calculating area under the curve
 	corr_list = [] # list containing all the acc lists of all runs
