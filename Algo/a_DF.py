@@ -345,23 +345,50 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         # print(">>> y_train " , np.unique(y_train))
         opt_result = opt.fit(x_train, y_train)      
 
+        # # get ranking and params
+        # params_searched = np.array(opt_result.cv_results_["params"])
+        # params_rank = np.array(opt_result.cv_results_["rank_test_score"])
+        # params_score = np.array(opt_result.cv_results_["mean_test_score"])
+        # # sprt based on rankings
+        # sorted_index = np.argsort(params_rank, kind='stable') # sort based on rank
+        # params_searched = params_searched[sorted_index]
+        # params_rank = params_rank[sorted_index]
+        # params_score = params_score[sorted_index]
+        # # index = index[0]
+
+        # # select top K based on kmeans of 2 clusters, we select the cluster with good results to put in the credal set
+        # kmeans = KMeans(n_clusters=2, random_state=seed).fit(params_score.reshape(-1, 1))
+        # cluster_result = kmeans.labels_
+        # index = np.where(cluster_result == 1)[0][0]
+        # if index == 0:
+        #     index = len(params_score)
         # get ranking and params
+
         params_searched = np.array(opt_result.cv_results_["params"])
         params_rank = np.array(opt_result.cv_results_["rank_test_score"])
-        params_score = np.array(opt_result.cv_results_["mean_test_score"])
+        params_score_mean = np.array(opt_result.cv_results_["mean_test_score"])
+        params_score_std  = np.array(opt_result.cv_results_["std_test_score"])
+
         # sprt based on rankings
         sorted_index = np.argsort(params_rank, kind='stable') # sort based on rank
         params_searched = params_searched[sorted_index]
         params_rank = params_rank[sorted_index]
-        params_score = params_score[sorted_index]
+        params_score_mean = params_score_mean[sorted_index]
+        params_score_std = params_score_std[sorted_index]
         # index = index[0]
+        # print(params_score_mean)
+        # print(params_score_std)
 
-        # select top K based on kmeans of 2 clusters, we select the cluster with good results to put in the credal set
-        kmeans = KMeans(n_clusters=2, random_state=seed).fit(params_score.reshape(-1, 1))
-        cluster_result = kmeans.labels_
-        index = np.where(cluster_result == 1)[0][0]
+        # Confidance interval
+        conf_int = params_score_mean[0] -  1 * params_score_std[0] # include SD which is 99%
+        # print("conf_int ", conf_int)
+        index = len(params_score_mean) - 1
+        while params_score_mean[index] < conf_int:
+            index -= 1
+            # print(f"{index}     {params_score_mean[index]} < {conf_int}")
         if index == 0:
-            index = len(params_score)
+            index = 1
+        
         params_searched = params_searched[: index]
         params_rank = params_rank[: index]
         print("cut index ", index)
@@ -499,23 +526,6 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         params_searched = np.array(opt_result.cv_results_["params"])
         params_rank = np.array(opt_result.cv_results_["rank_test_score"])
         params_score = np.array(opt_result.cv_results_["mean_test_score"])
-        # sprt based on rankings
-        # sorted_index = np.argsort(params_rank, kind='stable') # sort based on rank
-        # params_searched = params_searched[sorted_index]
-        # params_rank = params_rank[sorted_index]
-        # params_score = params_score[sorted_index]
-        # index = index[0]
-
-        # select top K based on kmeans of 2 clusters, we select the cluster with good results to put in the credal set
-        # kmeans = KMeans(n_clusters=2, random_state=seed).fit(params_score.reshape(-1, 1))
-        # cluster_result = kmeans.labels_
-        # index = np.where(cluster_result == 1)[0][0]
-        # if index == 0:
-        #     index = len(params_score)
-        # params_searched = params_searched[: index]
-        # params_rank = params_rank[: index]
-        # print("cut index ", index)
-        # retrain with top K and get test_prob, likelihood values
 
         credal_prob_matrix = []
         likelyhoods = []
@@ -551,6 +561,243 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         # print("porb_matrix forests ", porb_matrix.shape)
         # porb_matrix = porb_matrix.transpose([1,0,2]) # convert to the format that uncertainty_set14 uses ## laplace smoothing has no effect on set20
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set18(porb_matrix, likelyhoods, pram["epsilon"])
+
+    elif "set27" == unc_method: # Same as 24 but with confidance interval instead of clustering
+        sample_acc_list = []
+        credal_prob_matrix = []
+        likelyhoods = []
+        pram_smaple_list = []
+
+        pram_grid = {
+            "max_depth" :        np.arange(1,50),
+            # "min_samples_split": np.arange(2,10),
+            # "criterion" :        ["gini", "entropy"],
+            # "max_features" :     ["auto", "sqrt", "log2"],
+            # "n_estimators":      [pram["n_estimators"]]
+        }
+
+        opt = RandomizedSearchCV(estimator=RandomForestClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], random_state=seed, cv=3)
+        # print(">>> y_train " , np.unique(y_train))
+        opt_result = opt.fit(x_train, y_train)      
+
+        # get ranking and params
+        params_searched = np.array(opt_result.cv_results_["params"])
+        params_rank = np.array(opt_result.cv_results_["rank_test_score"])
+        params_score_mean = np.array(opt_result.cv_results_["mean_test_score"])
+        params_score_std  = np.array(opt_result.cv_results_["std_test_score"])
+
+        # sprt based on rankings
+        sorted_index = np.argsort(params_rank, kind='stable') # sort based on rank
+        params_searched = params_searched[sorted_index]
+        params_rank = params_rank[sorted_index]
+        params_score_mean = params_score_mean[sorted_index]
+        params_score_std = params_score_std[sorted_index]
+        # index = index[0]
+        # print(params_score_mean)
+        # print(params_score_std)
+
+        # Confidance interval
+        conf_int = params_score_mean[0] -  1 * params_score_std[0] # include SD which is 99%
+        # print("conf_int ", conf_int)
+        index = len(params_score_mean) - 1
+        while params_score_mean[index] < conf_int:
+            index -= 1
+            # print(f"{index}     {params_score_mean[index]} < {conf_int}")
+        if index == 0:
+            index = 1
+        # print("------------------------------------")    
+        # print("index ", index)
+        # print("conf_int ", conf_int)
+        params_searched = params_searched[: index]
+        params_rank = params_rank[: index]
+        # print("cut index ", index)
+        # retrain with top K and get test_prob, likelihood values
+
+        credal_prob_matrix = []
+        likelyhoods = []
+
+        for param in params_searched: # opt_pram_list: 
+            model = None
+            model = RandomForestClassifier(**param,random_state=seed)
+            model.fit(x_train, y_train)
+            
+            test_prob = model.predict_proba(x_test)
+            credal_prob_matrix.append(test_prob)
+            # train_prob = model.predict_proba(x_train)
+            # likelyhoods.append(log_loss(y_train,train_prob))
+
+            # likelyhoods.append(get_likelyhood(model, x_train, y_train, pram["n_estimators"], pram["laplace_smoothing"]))
+            # if credal_prob_matrix == []:
+            #     credal_prob_matrix = get_prob(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
+            # else:
+            #     credal_prob_matrix = np.concatenate((credal_prob_matrix, get_prob(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])), axis=1)
+
+
+        # likelyhoods = np.array(likelyhoods)
+        # likelyhoods = likelyhoods.reshape(-1)
+
+        # likelyhoods = np.exp(-likelyhoods) # convert log likelihood to likelihood
+        # likelyhoods = likelyhoods / np.sum(likelyhoods) # normalization of the likelihood
+
+        porb_matrix = np.array(credal_prob_matrix)
+        porb_matrix = porb_matrix.transpose([1,0,2]) # convert to the format that uncertainty_set14 uses ## laplace smoothing has no effect on set20
+        # print("------------------------------------porb_matrix.shape")
+        # print(porb_matrix.shape)
+        total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set14(porb_matrix)
+
+    elif "set28" == unc_method: # Ent version of set27
+        sample_acc_list = []
+        credal_prob_matrix = []
+        likelyhoods = []
+        pram_smaple_list = []
+
+        pram_grid = {
+            "max_depth" :        np.arange(1,50),
+            # "min_samples_split": np.arange(2,10),
+            # "criterion" :        ["gini", "entropy"],
+            # "max_features" :     ["auto", "sqrt", "log2"],
+            # "n_estimators":      [pram["n_estimators"]]
+        }
+
+        opt = RandomizedSearchCV(estimator=RandomForestClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], random_state=seed, cv=3)
+        # print(">>> y_train " , np.unique(y_train))
+        opt_result = opt.fit(x_train, y_train)      
+
+        # get ranking and params
+        params_searched = np.array(opt_result.cv_results_["params"])
+        params_rank = np.array(opt_result.cv_results_["rank_test_score"])
+        params_score_mean = np.array(opt_result.cv_results_["mean_test_score"])
+        params_score_std  = np.array(opt_result.cv_results_["std_test_score"])
+
+        # sprt based on rankings
+        sorted_index = np.argsort(params_rank, kind='stable') # sort based on rank
+        params_searched = params_searched[sorted_index]
+        params_rank = params_rank[sorted_index]
+        params_score_mean = params_score_mean[sorted_index]
+        params_score_std = params_score_std[sorted_index]
+        # index = index[0]
+        # print(params_score_mean)
+        # print(params_score_std)
+
+        # Confidance interval
+        conf_int = params_score_mean[0] -  1 * params_score_std[0] # include SD which is 99%
+        index = len(params_score_mean) - 1
+        while params_score_mean[index] < conf_int:
+            index -= 1
+        print("index ", index)
+        # print("conf_int ", conf_int)
+        params_searched = params_searched[: index]
+        params_rank = params_rank[: index]
+        # print("cut index ", index)
+        # retrain with top K and get test_prob, likelihood values
+
+        credal_prob_matrix = []
+        likelyhoods = []
+
+        for param in params_searched: # opt_pram_list: 
+            model = None
+            model = RandomForestClassifier(**param,random_state=seed)
+            model.fit(x_train, y_train)
+            
+            # test_prob = model.predict_proba(x_test)
+            # credal_prob_matrix.append(test_prob)
+            # train_prob = model.predict_proba(x_train)
+            # likelyhoods.append(log_loss(y_train,train_prob))
+
+            likelyhoods.append(get_likelyhood(model, x_train, y_train, pram["n_estimators"], pram["laplace_smoothing"]))
+            if credal_prob_matrix == []:
+                credal_prob_matrix = get_prob(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
+            else:
+                credal_prob_matrix = np.concatenate((credal_prob_matrix, get_prob(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])), axis=1)
+            # credal_prob_matrix.append(get_prob(model, x_test, pram["n_estimators"], pram["laplace_smoothing"]))
+
+
+        # likelyhoods = np.array(likelyhoods)
+        # likelyhoods = likelyhoods.reshape(-1)
+
+        # likelyhoods = np.exp(-likelyhoods) # convert log likelihood to likelihood
+        # likelyhoods = likelyhoods / np.sum(likelyhoods) # normalization of the likelihood
+
+        porb_matrix = np.array(credal_prob_matrix)
+        total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set15(porb_matrix)
+
+    elif "set24mix" == unc_method: # mix of 24 tree for epist and forest for ale. with conf int
+        credal_prob_matrix = []
+        likelyhoods = []
+        credal_prob_matrix_f = []
+        likelyhoods_f = []
+
+        pram_grid = {
+            "max_depth" :        np.arange(1,50),
+            "min_samples_split": np.arange(2,10),
+            "criterion" :        ["gini", "entropy"],
+            "max_features" :     ["auto", "sqrt", "log2"],
+            "n_estimators":      [pram["n_estimators"]]
+        }
+
+        opt = RandomizedSearchCV(estimator=RandomForestClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], random_state=seed)
+        opt_result = opt.fit(x_train, y_train)      
+        
+        params_searched = np.array(opt_result.cv_results_["params"])
+        params_rank = np.array(opt_result.cv_results_["rank_test_score"])
+        params_score_mean = np.array(opt_result.cv_results_["mean_test_score"])
+        params_score_std  = np.array(opt_result.cv_results_["std_test_score"])
+
+        # sprt based on rankings
+        sorted_index = np.argsort(params_rank, kind='stable') # sort based on rank
+        params_searched = params_searched[sorted_index]
+        params_rank = params_rank[sorted_index]
+        params_score_mean = params_score_mean[sorted_index]
+        params_score_std = params_score_std[sorted_index]
+
+        # Confidance interval
+        conf_int = params_score_mean[0] -  1 * params_score_std[0] # include SD which is 99%
+        index = len(params_score_mean) - 1
+        while params_score_mean[index] < conf_int:
+            index -= 1
+        if index == 0:
+            index = 1
+        
+        params_searched = params_searched[: index]
+        params_rank = params_rank[: index]
+
+        credal_prob_matrix = []
+        likelyhoods = []
+
+        for param in params_searched: # opt_pram_list: 
+            model = None
+            model = RandomForestClassifier(**param,random_state=seed)
+            model.fit(x_train, y_train)
+            
+            test_prob = model.predict_proba(x_test)
+            credal_prob_matrix_f.append(test_prob)
+            train_prob = model.predict_proba(x_train)
+            likelyhoods_f.append(log_loss(y_train,train_prob))
+
+            likelyhoods.append(get_likelyhood(model, x_train, y_train, pram["n_estimators"], pram["laplace_smoothing"]))
+            if credal_prob_matrix == []:
+                credal_prob_matrix = get_prob(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
+            else:
+                credal_prob_matrix = np.concatenate((credal_prob_matrix, get_prob(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])), axis=1)
+
+        likelyhoods = np.array(likelyhoods)
+        likelyhoods = likelyhoods.reshape(-1)
+
+        likelyhoods_f = np.array(likelyhoods_f)
+        likelyhoods_f = likelyhoods_f.reshape(-1)
+
+        # print("likelyhoods forests ", likelyhoods.shape)
+        likelyhoods = np.exp(-likelyhoods) # convert log likelihood to likelihood
+        likelyhoods = likelyhoods / np.sum(likelyhoods) # normalization of the likelihood
+        likelyhoods_f = np.exp(-likelyhoods_f) # convert log likelihood to likelihood
+        likelyhoods_f = likelyhoods_f / np.sum(likelyhoods_f) # normalization of the likelihood
+
+        porb_matrix = np.array(credal_prob_matrix)
+        porb_matrix_f = np.array(credal_prob_matrix_f)
+        porb_matrix_f = porb_matrix_f.transpose([1,0,2]) # convert to the format that uncertainty_set14 uses ## laplace smoothing has no effect on set20
+        _, epistemic_uncertainty, _ = unc.uncertainty_set18(porb_matrix, likelyhoods, pram["epsilon"])
+        _, _, aleatoric_uncertainty = unc.uncertainty_set18(porb_matrix_f, likelyhoods_f, pram["epsilon"])
+        total_uncertainty = epistemic_uncertainty + aleatoric_uncertainty
 
     elif "out.tree" == unc_method:
         porb_matrix = get_prob(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
