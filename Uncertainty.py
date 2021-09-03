@@ -72,43 +72,45 @@ if __name__ == '__main__':
     job_id = 0 # for developement
     seed   = 1
     runs = 1
-    data_name = "Jdata/parkinsons"
+    data_name = "Jdata/vertebral"
     algo = "DF"
-    unc_method = "set24"
-    prams = {
-    'criterion'        : "entropy",
-    'max_depth'        : 10,
-    'max_features'     : "auto",
-    'n_estimators'     : 3,
-    'opt_iterations'   : 10,
-    'epsilon'          : 2,
-
-    'credal_size'      : 10,
-    # 'credal_sample_size' : 5,
-    # 'credal_L'           : 3,
-
-    # 'dropconnect_prob' : 0.2,
-    # 'epochs'           : 1,
-    # 'init_epochs'      : 10,
-    # 'MC_samples'       : 5,
-
-    'laplace_smoothing': 1,
-    'split'            : 0.025,
-    'run_start'          : 0,
-    }
-
+    unc_method = "set24mix"
     # prams = {
-    # 'criterion'          : "entropy",
-    # 'max_features'       : "auto",
-    # 'max_depth'          : 10,
-    # 'n_estimators'       : 10,
-    # 'opt_iterations'     : 50,
-    # 'epsilon'            : 2,
-    # 'credal_size'        : 10,
-    # 'laplace_smoothing'  : 1,
-    # 'split'              : 0.30,
+    # 'criterion'        : "entropy",
+    # 'max_depth'        : 10,
+    # 'max_features'     : "auto",
+    # 'n_estimators'     : 3,
+    # 'opt_iterations'   : 50,
+    # 'epsilon'          : 2,
+    # 'n_estimator_predict': 10,
+
+    # 'credal_size'      : 10,
+    # # 'credal_sample_size' : 5,
+    # # 'credal_L'           : 3,
+
+    # # 'dropconnect_prob' : 0.2,
+    # # 'epochs'           : 1,
+    # # 'init_epochs'      : 10,
+    # # 'MC_samples'       : 5,
+
+    # 'laplace_smoothing': 1,
+    # 'split'            : 0.025,
     # 'run_start'          : 0,
     # }
+
+    prams = {
+    'criterion'          : "entropy",
+    'max_features'       : "auto",
+    'max_depth'          : 10,
+    'n_estimators'       : 10,
+    'n_estimator_predict': 10,
+    'opt_iterations'     : 20,
+    'epsilon'            : 2,
+    'credal_size'        : 999,
+    'laplace_smoothing'  : 1,
+    'split'              : 0.30,
+    'run_start'          : 0,
+    }
 
     base_dir = os.path.dirname(os.path.realpath(__file__))
     dir = f"{base_dir[:-12]}/Database/DB_files/job_{job_id}"

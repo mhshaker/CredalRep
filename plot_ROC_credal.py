@@ -20,11 +20,11 @@ vertical_plot = False
 single_plot = False
 legend_flag = False
 
-data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod", "bank", "QSAR", "spambase"] 
+# data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod", "bank", "QSAR", "spambase"] 
 # data_list  = ["vertebral","breast", "ionosphere", "blod", "QSAR", "wine_qw"] 
 # data_list = ["climate", "parkinsons", "spambase"]
 # data_list = ["climate", "vertebral"]
-# data_list = ["parkinsons"]
+data_list = ["parkinsons"]
 modes     = "eat"
 
 for data in data_list:
@@ -142,9 +142,9 @@ for data in data_list:
             # print(steps)
             # exit()
             # print(">>>> ", acc_rej_area)
-            roc_avg_area = unc.roc(all_runs_prob, all_runs_p,all_runs_l,all_runs_unc, unc_value_plot)
+            roc_avg_area, roc_std_area = unc.roc(all_runs_prob, all_runs_p,all_runs_l,all_runs_unc, unc_value_plot)
 
-            # print(">>>>>>>>", avg_acc)
+            print("roc_avg_area ", roc_avg_area, " std ", roc_std_area)
             linestyle = '-'
             # if "set19" in legend:
             #     linestyle = ':'

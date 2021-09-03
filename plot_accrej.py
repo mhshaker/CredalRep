@@ -15,7 +15,7 @@ if not os.path.exists(pic_dir):
 unc_value_plot = False
 local          = False
 vertical_plot  = False
-single_plot    = False
+single_plot    = True
 
 color_correct  = False
 job_id         = True
@@ -26,20 +26,20 @@ legend_flag    = True
 # data_list  = ["vertebral","breast", "ionosphere", "blod", "QSAR", "wine_qw"] 
 # data_list = ["climate", "parkinsons", "spambase"]
 # data_list = ["climate", "vertebral"]
-data_list = ["spambase"]
+data_list = ["climate"]
 modes     = "eat"
 
 for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name   = "bays_fair"
+    run_name   = "set27_main"
     run_name2  = "presentation100"
-    plot_name = data + "_baysFair"
+    plot_name = data + "_Single"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND ((run_name='{run_name}' AND (result_type='set20' OR result_type='set21')) OR (run_name='{run_name2}' AND (result_type='bays' OR result_type='set18' OR result_type='set19')))"
-    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
+    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5368 OR id=5369"
-    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5443 OR id=5445 OR id=5441"
+    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5522"
 
     ########################################################################################################################################################
 
