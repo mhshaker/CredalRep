@@ -17,7 +17,7 @@ prams = {
 'n_estimators'       : 10,
 'n_estimator_predict': 10,
 'opt_iterations'     : 20,
-'epsilon'            : 1.01,
+'epsilon'            : 3,
 'credal_size'        : 999,
 'laplace_smoothing'  : 1,
 'split'              : 0.30,
