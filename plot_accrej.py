@@ -15,7 +15,7 @@ if not os.path.exists(pic_dir):
 unc_value_plot = False
 local          = False
 vertical_plot  = False
-single_plot    = False
+single_plot    = True
 
 color_correct  = False
 job_id         = True
@@ -23,7 +23,7 @@ in_plot_legend = False
 legend_flag    = True
 
 # data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod", "bank", "QSAR", "spambase"] 
-# data_list  = ["vertebral","breast", "ionosphere", "blod", "QSAR", "wine_qw"] 
+# data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod"] 
 # data_list = ["climate", "parkinsons", "spambase"]
 # data_list = ["climate", "vertebral"]
 data_list = ["parkinsons"]
@@ -33,10 +33,10 @@ for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name   = "roc_test_run20vsCV5"
-    plot_name = data + "_roc_test_run20vsCV5"
-    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
-    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5552"
+    run_name   = "s_delta"
+    plot_name = data + "_s_delta_single"
+    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
+    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5576"
 
     ########################################################################################################################################################
 
@@ -277,10 +277,12 @@ for data in data_list:
                     labels, handles = zip(*sorted(zip(labels, handles), key=lambda t: t[0]))
                     axs[mode_index].legend(handles, labels)
 
-    for mode_index, mode in enumerate(modes): # uniform y axis along all plots
-        axs[mode_index].axis(ymin=uni_y_range[0],ymax=uni_y_range[1])
+    
 
     if single_plot == False:
+        for mode_index, mode in enumerate(modes): # uniform y axis along all plots
+            axs[mode_index].axis(ymin=uni_y_range[0],ymax=uni_y_range[1])
+
         acc_lable_flag = True
         job_plots_list = list(axs.flat)
         if vertical_plot:

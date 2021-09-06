@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import UncertaintyM as unc
 import warnings
+import pandas as pd
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
 pic_dir = f"{base_dir}/pic/unc"
@@ -16,16 +17,19 @@ local          = False
 job_id         = True
 
 # data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod", "bank", "QSAR", "spambase"] 
+# data_list = ["parkinsons","vertebral","climate", "ionosphere", "blod"]
 data_list = ["parkinsons"]
 modes     = "eat"
 
 for data in data_list:
-    print(f"-------------------------------------------------------------- {data}")
+    data_df = pd.DataFrame(columns=["job_id", "Method", "Parameter", "Epistemic", "e_sd", "Aleatoric", "a_sd", "Total", "t_sd"])
+    data_df.set_index('job_id', inplace=True)
+    print(f"-------------------------------------------------------------------------------------- {data}")
     # prameters ############################################################################################################################################
 
-    run_name   = "roc_test_run20vsCV5"
-    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
-    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5513 OR id=5514"
+    run_name   = "s_delta_set24"
+    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
+    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5604 OR id=5712 OR id=5703"
 
     ########################################################################################################################################################
     
@@ -57,6 +61,10 @@ for data in data_list:
         if not os.path.exists(res_dir):
             os.makedirs(res_dir)
 
+        job_id_df = 0
+        unc_method_df = "UNKNOWN"
+        param_df = 0
+
         method_line = ""
         for mode_index, mode in enumerate(modes):
             dir_prob = dir + "/prob"
@@ -65,13 +73,14 @@ for data in data_list:
             dir_mode = dir + "/" + mode
 
             legend = ""
-
             if method_line == "":
                 if job_id:
                     method_line += " " + str(job[1])
+                    job_id_df = job[1]
 
                 for text in job[3:]:
-                    method_line += " " +str(text) 
+                    method_line += " " +str(text)
+                    unc_method_df = str(text)
 
 
             # get the list of file names
@@ -103,5 +112,17 @@ for data in data_list:
 
             AUROC_mean, AUROC_std = unc.roc(all_runs_prob, all_runs_p,all_runs_l,all_runs_unc)
             method_line += f"   {mode} {AUROC_mean:.4f} +- {AUROC_std:.2f}"
+            # print(f">>>>>>>>>>> {job_id_df} mode {mode}")
+            if mode== "e":
+                data_df.loc[job_id_df] = {"Method":unc_method_df, "Parameter": param_df, "Epistemic":AUROC_mean, "e_sd":AUROC_std}
+            elif mode== "a":
+                data_df.loc[job_id_df, ["Aleatoric"]] = AUROC_mean
+                data_df.loc[job_id_df, ["a_sd"]] = AUROC_std
+            elif mode== "t":
+                data_df.loc[job_id_df, ["Total"]] = AUROC_mean
+                data_df.loc[job_id_df, ["t_sd"]] = AUROC_std
             np.savetxt(f"{res_dir}/{mode}_ROC.txt", np.array([AUROC_mean, AUROC_std]))
-        print(method_line)
+        # print(method_line)
+    # print("------------------------------------")
+    print(data_df.head())
+  
