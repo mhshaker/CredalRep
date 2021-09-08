@@ -12,46 +12,49 @@ from sklearn.model_selection import RandomizedSearchCV
 from sklearn.cluster import KMeans
 
 
-def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=True, opt_pram_list=None):
+def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=True, opt_decision_model=True):
     np.random.seed(seed)
     us = unc_method.split('_')
     unc_method = us[0]
     if len(us) > 1:
         unc_mode = us[1] # spliting the active selection mode (_a _e _t) from the unc method because DF dose not work with that
 
-    pram_grid = {
-        "max_depth" :        np.arange(1,50),
-        # "min_samples_split": np.arange(2,10),
-        # "criterion" :        ["gini", "entropy"],
-        # "max_features" :     ["auto", "sqrt", "log2"],
-        # "n_estimators":      [pram["n_estimators"]]
-    }
+    if opt_decision_model or unc_method =="set24": # or 27 or 28 or 24mix but they are not good and I dont plan on using them
+        pram_grid = {
+            "max_depth" :        np.arange(1,50),
+            # "min_samples_split": np.arange(2,10),
+            # "criterion" :        ["gini", "entropy"],
+            # "max_features" :     ["auto", "sqrt", "log2"],
+            # "n_estimators":      [pram["n_estimators"]]
+        }
 
-    opt = RandomizedSearchCV(estimator=RandomForestClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], random_state=seed)
-    opt_result = opt.fit(x_train, y_train)      
+        opt = RandomizedSearchCV(estimator=RandomForestClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], random_state=seed)
+        opt_result = opt.fit(x_train, y_train)      
 
-    params_searched = np.array(opt_result.cv_results_["params"])
-    params_rank = np.array(opt_result.cv_results_["rank_test_score"])
-    params_score_mean = np.array(opt_result.cv_results_["mean_test_score"])
-    params_score_std  = np.array(opt_result.cv_results_["std_test_score"])
+        params_searched = np.array(opt_result.cv_results_["params"])
+        params_rank = np.array(opt_result.cv_results_["rank_test_score"])
+        params_score_mean = np.array(opt_result.cv_results_["mean_test_score"])
+        params_score_std  = np.array(opt_result.cv_results_["std_test_score"])
 
-    # sprt based on rankings
-    sorted_index = np.argsort(params_rank, kind='stable') # sort based on rank
-    params_searched = params_searched[sorted_index]
-    params_rank = params_rank[sorted_index]
-    params_score_mean = params_score_mean[sorted_index]
-    params_score_std = params_score_std[sorted_index]
+        # sprt based on rankings
+        sorted_index = np.argsort(params_rank, kind='stable') # sort based on rank
+        params_searched = params_searched[sorted_index]
+        params_rank = params_rank[sorted_index]
+        params_score_mean = params_score_mean[sorted_index]
+        params_score_std = params_score_std[sorted_index]
 
     model = None
-    # model = RandomForestClassifier(bootstrap=True,
-    #     criterion=pram['criterion'],
-    #     max_depth=pram["max_depth"],
-    #     max_features= pram["max_features"],
-    #     n_estimators=pram["n_estimator_predict"],
-    #     random_state=seed,
-    #     verbose=0,
-    #     warm_start=False)
-    model = RandomForestClassifier(**params_searched[0],random_state=seed)
+    if opt_decision_model == False:
+        model = RandomForestClassifier(bootstrap=True,
+            # criterion=pram['criterion'],
+            max_depth=pram["max_depth"],
+            # max_features= pram["max_features"],
+            n_estimators=pram["n_estimator_predict"],
+            random_state=seed,
+            verbose=0,
+            warm_start=False)
+    else:
+        model = RandomForestClassifier(**params_searched[0],random_state=seed)
 
     model.fit(x_train, y_train)
     if predict:

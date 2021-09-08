@@ -26,15 +26,15 @@ data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod",
 # data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod"] 
 # data_list = ["climate", "parkinsons", "spambase"]
 # data_list = ["climate", "vertebral"]
-# data_list = ["parkinsons"]
+data_list = ["bank"]
 modes     = "eat"
 
 for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name   = "all"
-    plot_name = data + "_all_meeting"
+    run_name   = "test_no_opt3"
+    plot_name = data + "_test_no_opt3"
     query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5576"
 

@@ -3,13 +3,14 @@ import os
 
 auto_run = False
 
-data_names     = ["Jdata/parkinsons", "Jdata/vertebral","Jdata/ionosphere", "Jdata/climate", "Jdata/blod", "Jdata/breast","Jdata/bank", "Jdata/QSAR", "Jdata/spambase"] # 
+# data_names     = ["Jdata/parkinsons", "Jdata/vertebral","Jdata/ionosphere", "Jdata/climate", "Jdata/blod", "Jdata/breast","Jdata/bank", "Jdata/QSAR", "Jdata/spambase"] # 
 # data_names     = ["Jdata/parkinsons", "Jdata/vertebral","Jdata/ionosphere", "Jdata/climate", "Jdata/blod"] # 
-# data_names     = ["Jdata/parkinsons"] 
+data_names     = ["Jdata/bank"] 
 algos          = ["DF"] # ,"LR"
-modes          = ["bays", "set18","set19", "set24", "out"]
+# modes          = ["bays", "set18","set19", "set24", "out"]
+modes          = ["bays"]
 task           = "unc"
-runs           = 20
+runs           = 100
 prams = {
 'criterion'          : "entropy",
 'max_features'       : "auto",
@@ -22,14 +23,15 @@ prams = {
 'laplace_smoothing'  : 1,
 'split'              : 0.30,
 'run_start'          : 0,
-'cv'                 : 0
+'cv'                 : 0,
+'opt_decision_model' : True
 }
 
 
 for algo in algos:
     for data_name in data_names:
         for mode in modes:
-            run_name       = "all" #f"{mode}_{algo}" + "noctua_test" # if you want a specific name give it here
+            run_name       = "test_no_opt3" #f"{mode}_{algo}" + "noctua_test" # if you want a specific name give it here
             description    = "acc_hist"
 
             mydb = db.connect(host="131.234.250.119", user="noctua", passwd="uncertainty", database="uncertainty")
