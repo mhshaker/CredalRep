@@ -15,28 +15,28 @@ if not os.path.exists(pic_dir):
 unc_value_plot = False
 local          = False
 vertical_plot  = False
-single_plot    = True
+single_plot    = False
 
 color_correct  = False
 job_id         = True
 in_plot_legend = False
 legend_flag    = True
 
-# data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod", "bank", "QSAR", "spambase"] 
+data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod", "bank", "QSAR", "spambase"] 
 # data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod"] 
 # data_list = ["climate", "parkinsons", "spambase"]
 # data_list = ["climate", "vertebral"]
-data_list = ["parkinsons"]
+# data_list = ["parkinsons"]
 modes     = "eat"
 
 for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name   = "s_delta"
-    plot_name = data + "_s_delta_single"
-    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
-    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5576"
+    run_name   = "all"
+    plot_name = data + "_all_meeting"
+    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
+    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5576"
 
     ########################################################################################################################################################
 
@@ -267,7 +267,7 @@ for data in data_list:
                 axs[mode_index].plot(steps, avg_acc, linestyle=linestyle, color=color, label=legend, alpha=alpha)
 
                 y_range = axs[mode_index].get_ylim() # code to find the min and max of y axis range
-                if y_range[0] < uni_y_range[0]:
+                if uni_y_range[0] == 100:
                     uni_y_range[0] = y_range[0]
                 if y_range[1] > uni_y_range[1]:
                     uni_y_range[1] = y_range[1]
