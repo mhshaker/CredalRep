@@ -21,7 +21,7 @@ def create_roc_table(data_list, query, pram_name="", modes="eat"):
     df_res_list = []
 
     for data in data_list:
-        data_df = pd.DataFrame(columns=["job_id", "Method", "Parameter", "Epistemic", "e_sd", "Aleatoric", "a_sd", "Total", "t_sd"])
+        data_df = pd.DataFrame(columns=["job_id", "Method", "Parameter", "Epistemic", "Aleatoric", "Total", "e_sd", "a_sd", "t_sd"])
         data_df.set_index('job_id', inplace=True)
         # print(f"-------------------------------------------------------------------------------------- {data}")
         
@@ -125,6 +125,7 @@ def create_roc_table(data_list, query, pram_name="", modes="eat"):
         data_df["a_sd"] = pd.to_numeric(data_df["a_sd"], downcast="float")
         data_df["Total"] = pd.to_numeric(data_df["Total"], downcast="float")
         data_df["t_sd"] = pd.to_numeric(data_df["t_sd"], downcast="float")
+        data_df = data_df[["Method", "Parameter", "Epistemic", "Aleatoric", "Total", "e_sd", "a_sd", "t_sd"]]
         df_res_list.append(data_df)
     return df_res_list
 

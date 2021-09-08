@@ -7,9 +7,9 @@ data_names     = ["Jdata/parkinsons", "Jdata/vertebral","Jdata/ionosphere", "Jda
 # data_names     = ["Jdata/parkinsons", "Jdata/vertebral","Jdata/ionosphere", "Jdata/climate", "Jdata/blod"] # 
 # data_names     = ["Jdata/parkinsons"] 
 algos          = ["DF"] # ,"LR"
-modes          = ["set19"]
+modes          = ["bays", "set18","set19", "set24", "out"]
 task           = "unc"
-runs           = 10
+runs           = 20
 prams = {
 'criterion'          : "entropy",
 'max_features'       : "auto",
@@ -17,7 +17,7 @@ prams = {
 'n_estimators'       : 10,
 'n_estimator_predict': 10,
 'opt_iterations'     : 20,
-'epsilon'            : 3,
+'epsilon'            : 1.01,
 'credal_size'        : 999,
 'laplace_smoothing'  : 1,
 'split'              : 0.30,
@@ -29,7 +29,7 @@ prams = {
 for algo in algos:
     for data_name in data_names:
         for mode in modes:
-            run_name       = "s_delta_set19" #f"{mode}_{algo}" + "noctua_test" # if you want a specific name give it here
+            run_name       = "all" #f"{mode}_{algo}" + "noctua_test" # if you want a specific name give it here
             description    = "acc_hist"
 
             mydb = db.connect(host="131.234.250.119", user="noctua", passwd="uncertainty", database="uncertainty")
