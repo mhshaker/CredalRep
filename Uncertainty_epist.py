@@ -19,19 +19,29 @@ from sklearn.ensemble import RandomForestClassifier
 @ray.remote
 def uncertainty_quantification(seed, features, target, prams, mode, algo, dir, opt_decision_model=True):
     s_time = time.time()
-    x_train, x_test, y_train, y_test = dp.split_data(features, target, split=prams["split"], seed=seed)
+    np.random.seed(seed)
+    classes = np.unique(target)
+    selected_id = np.random.choice(classes,int(len(classes)/2),replace=False) # select id classes
+    selected_id_index = np.argwhere(np.isin(target,selected_id)) # get index of all id instances
+    selected_ood_index = np.argwhere(np.isin(target,selected_id,invert=True)) # get index of all not selected classes (OOD)
+
+    target_id    = target[selected_id_index].reshape(-1)
+    features_id  = features[selected_id_index].reshape(-1, features.shape[1])
+    target_ood   = target[selected_ood_index].reshape(-1)
+    features_ood = features[selected_ood_index].reshape(-1, features.shape[1])    
     
+    x_train, x_test_id, y_train, y_test_id  = dp.split_data(features_id, target_id,   split=prams["split"], seed=seed)
+    _      , x_test_ood, _     , y_test_ood = dp.split_data(features_ood, target_ood, split=prams["split"], seed=seed)
+
+    y_test = np.concatenate((np.zeros(y_test_id.shape), np.ones(y_test_ood.shape)), axis=0)
+    x_test = np.concatenate((x_test_id, x_test_ood), axis=0)
+    # print("------------------------------------ y_test")
+    # print(y_test)
+    # print(y_test.shape)
+
     if algo == "DF":
         predictions , t_unc, e_unc, a_unc, model = df.DF_run(x_train, x_test, y_train, y_test, prams, unc_method, seed, opt_decision_model=opt_decision_model)
         probs = model.predict_proba(x_test)
-    # elif algo == "eRF":
-    #     predictions , t_unc, e_unc, a_unc, model = erf.eRF_run(x_train, x_test, y_train, y_test, prams, unc_method, seed)
-    # elif algo == "Tree":
-    #     predictions , t_unc, e_unc, a_unc, model = tree.Tree_run(x_train, x_test, y_train, y_test, prams, unc_method, seed)
-    # elif algo == "BN":
-    #     y_train_BN, y_test_BN, model = bn.BN_init(x_train, x_test, y_train, y_test, prams, unc_method, seed)
-    #     acc , t_unc, e_unc, a_unc, model = bn.BN_run(x_train, x_test, y_train, y_test, 0, 0, prams, unc_method, seed, model, active_step=0) 
-    #     predictions , t_unc, e_unc, a_unc, model = tree.Tree_run(x_train, x_test, y_train, y_test, prams, unc_method, seed)
     else:
         print("[ERORR] Undefined Algo")
         exit()
@@ -113,23 +123,24 @@ if __name__ == '__main__':
     job_id = 0 # for developement
     seed   = 1
     runs = 1
-    data_name = "Jdata/vertebral"
+    data_name = "Jdata/fashionMnist" #  
     algo = "DF"
     unc_method = "bays"
     opt_decision_model = False
     prams = {
     'criterion'          : "entropy",
     'max_features'       : "auto",
-    'max_depth'          : 10,
-    'n_estimators'       : 10, # 3
-    'n_estimator_predict': 10, # 3
+    'max_depth'          : 2,
+    'n_estimators'       : 3,
+    'n_estimator_predict': 3,
     'opt_iterations'     : 20,
-    'epsilon'            : 2,
+    'epsilon'            : 1.01,
     'credal_size'        : 999,
     'laplace_smoothing'  : 1,
-    'split'              : 0.30, # 0.025
+    'split'              : 0.30,
     'run_start'          : 0,
-    'cv'                 : 10
+    'cv'                 : 0,
+    'opt_decision_model' : False
     }
 
     base_dir = os.path.dirname(os.path.realpath(__file__))

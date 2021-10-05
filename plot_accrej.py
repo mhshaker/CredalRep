@@ -17,26 +17,25 @@ local          = False
 vertical_plot  = False
 single_plot    = False
 
-color_correct  = False
-job_id         = True
-in_plot_legend = False
-legend_flag    = True
+color_correct  = True
+job_id         = False
+in_plot_legend = True
+legend_flag    = False
 
-data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod", "bank", "QSAR", "spambase"] 
+data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "QSAR", "spambase"]  #, "blod", "bank"
 # data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod"] 
 # data_list = ["climate", "parkinsons", "spambase"]
-# data_list = ["climate", "vertebral"]
-data_list = ["bank"]
+# data_list = ["climate"]
 modes     = "eat"
 
 for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name   = "test_no_opt3"
-    plot_name = data + "_test_no_opt3"
-    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
-    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5576"
+    run_name   = "wuml21_2"
+    plot_name = data + "_CIworkshop"
+    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND run_name='{run_name}' AND (result_type='bays' OR result_type='set18' OR result_type='set19')"
+    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=5881 OR id=5883" 
 
     ########################################################################################################################################################
 
@@ -114,12 +113,12 @@ for data in data_list:
             # legend += mode   
 
             # prams = str(job[2])
-            # pram_name = "credal_size"
+            # pram_name = "epsilon"
             # search_pram = f"'{pram_name}': "
             # v_index_s = prams.index(search_pram)
             # v_index_e = prams.index(",", v_index_s)
-            # max_depth = int(prams[v_index_s+len(search_pram) : v_index_e])
-            # legend += " cs: " + str(max_depth)
+            # max_depth = prams[v_index_s+len(search_pram) : v_index_e]
+            # legend += " delta: " + str(max_depth)
 
             # prams = str(job[2])
             # pram_name = "opt_iterations"
@@ -199,9 +198,9 @@ for data in data_list:
                 if "set14" in legend:
                     color = "blue"
                 if "set15" in legend:
-                    color = "red"
+                    color = "blue"
                 if "set18" in legend:
-                    color = "red"
+                    color = "blue"
                 if "set19" in legend:
                     color = "red"
                 if "set20" in legend:
@@ -211,11 +210,11 @@ for data in data_list:
                     color = "purple"
                     alpha = 0.3
                 if "set24" in legend:
-                    color = "black"
+                    color = "red"
                 if "set25" in legend:
-                    color = "black"
+                    color = "red"
                 if "out" in legend:
-                    color = "orange"
+                    color = "black"
             else:
                 color = None
 
@@ -228,11 +227,11 @@ for data in data_list:
             legend = legend.replace("bays", "Bayes")
             legend = legend.replace("set14", "Levi-GH-boot")
             legend = legend.replace("set15", "Levi-Ent-boot")
-            legend = legend.replace("set18", "L-C1-GH")
-            legend = legend.replace("set19", "L-C1-Ent")
+            legend = legend.replace("set18", "Levi-GH")
+            legend = legend.replace("set19", "Levi-Ent")
             legend = legend.replace("set20", "L-C2-GH")
             legend = legend.replace("set21", "L-C2-Ent")
-            legend = legend.replace("set24", "L-C3-GH")
+            legend = legend.replace("set24", "L-C3-GH")  # it is C3 but just for the WUML21 presentation
             legend = legend.replace("set25", "L-C3-Ent")
             legend = legend.replace("gs", "GS")
 
@@ -289,7 +288,7 @@ for data in data_list:
             job_plots_list = reversed(list(axs.flat))
         for ax in job_plots_list:
             if acc_lable_flag:
-                # ax.set(xlabel=xlabel, ylabel=ylabel)
+                ax.set(xlabel=xlabel, ylabel=ylabel)
                 # ax.set(xlabel=xlabel)
                 ax.set(ylabel=ylabel)
                 acc_lable_flag = False
@@ -298,7 +297,7 @@ for data in data_list:
                     ax.set(ylabel=ylabel)
                     # pass
                 else:
-                    # ax.set(xlabel=xlabel)
+                    ax.set(xlabel=xlabel)
                     pass
     # title = plot_list
     # fig.suptitle(data)

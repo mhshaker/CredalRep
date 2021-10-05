@@ -39,7 +39,7 @@ def load_data(data_name):
 	return features, target
 
 def split_data(features, target, split, seed=1):
-   x_train, x_test, y_train, y_test = train_test_split(features,target,test_size=split, shuffle=True, random_state=seed)
+   x_train, x_test, y_train, y_test = train_test_split(features,target,test_size=split, shuffle=True, random_state=seed, stratify=target)
    return x_train, x_test, y_train, y_test
 
 def balance_dataset(df):

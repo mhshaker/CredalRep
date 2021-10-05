@@ -13,12 +13,13 @@ pic_dir = f"{base_dir}/pic/unc"
 if not os.path.exists(pic_dir):
     os.makedirs(pic_dir)
 
+job_id = False
 local = False
 color_correct = True
 legend_flag = False
 
-data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod", "bank", "QSAR", "spambase"] 
-# data_list  = ["vertebral","breast", "ionosphere", "blod", "QSAR", "wine_qw"] 
+# data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod", "bank", "QSAR", "spambase"] 
+data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "QSAR", "spambase"] 
 # data_list = ["climate", "parkinsons", "spambase"]
 # data_list = ["climate", "vertebral"]
 # data_list = ["parkinsons"]
@@ -30,14 +31,14 @@ for data in data_list:
 
     # run_name  = "ROC_area"
     # plot_name = data + "_dist"
-    run_name   = "presentation50_30"
+    run_name   = "wuml21_2"
     run_name2  = "presentation100"
     plot_name = data + "_dist"
-    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND ((run_name='{run_name}' AND (result_type='set20' OR result_type='set21')) OR (run_name='{run_name2}' AND (result_type='bays' OR result_type='set18' OR result_type='set19')))"
+    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND ((run_name='{run_name}' AND (result_type='set20' OR result_type='set21')) OR (run_name='{run_name2}' AND (result_type='bays' OR result_type='set18' OR result_type='set19')))"
 
-    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND (run_name='{run_name}' AND result_type='set18' OR run_name='unc_out2' AND result_type='out')"
+    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND run_name='{run_name}'"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
-    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id>=4984 AND id<=4986"
+    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id=5826 or id=5828"
 
     ########################################################################################################################################################
 
@@ -71,7 +72,7 @@ for data in data_list:
         jobs.append(job)
 
     fig, axs = plt.subplots(len(jobs),len(modes))
-    fig.set_figheight(25)
+    fig.set_figheight(5*len(jobs))
     fig.set_figwidth(15)
     legend_list = []
 
@@ -98,6 +99,9 @@ for data in data_list:
             dir_mode = dir + "/" + mode
 
             legend = ""
+
+            if job_id:
+                legend += " " + str(job[1])
 
             for text in job[3:]:
                 legend += " " +str(text) 
@@ -166,9 +170,13 @@ for data in data_list:
             else:
                 color = None
 
-            legend = legend.replace("set18", "Levi-GH")
-            legend = legend.replace("set19", "Levi-Ent")
+            # legend = legend.replace("set18", "Levi-GH")
+            # legend = legend.replace("set19", "Levi-Ent")
             legend = legend.replace("out", "Outcome")
+            legend = legend.replace("set18", "L-C1-GH")
+            legend = legend.replace("set19", "L-C1-Ent")
+            legend = legend.replace("set24", "L-C2-GH")  # it is C3 but just for the WUML21 presentation
+            legend = legend.replace("set25", "L-C2-Ent")
 
             plot_legend = ""
             # if mode == "a":

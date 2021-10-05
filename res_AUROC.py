@@ -1,4 +1,4 @@
-import sys
+# import sys
 import mysql.connector as db
 import os
 import math
@@ -17,7 +17,7 @@ local          = False
 job_id         = True
 
 
-def create_roc_table(data_list, query, pram_name="", modes="eat"):
+def create_roc_table(data_list, query, pram_name="", modes="eat", epist_exp=False):
     df_res_list = []
 
     for data in data_list:
@@ -108,7 +108,12 @@ def create_roc_table(data_list, query, pram_name="", modes="eat"):
                     run_result = np.loadtxt(dir_l+"/"+f)
                     all_runs_l.append(run_result)
 
-                AUROC_mean, AUROC_std = unc.roc(all_runs_prob, all_runs_p,all_runs_l,all_runs_unc)
+                if epist_exp == True:
+                    AUROC_mean, AUROC_std = unc.roc_epist(all_runs_prob, all_runs_p,all_runs_l,all_runs_unc)
+                    # print("Yes ", AUROC_mean)
+                else:
+                    AUROC_mean, AUROC_std = unc.roc(all_runs_prob, all_runs_p,all_runs_l,all_runs_unc)
+
                 method_line += f"   {mode} {AUROC_mean:.4f} +- {AUROC_std:.2f}"
 
                 if mode== "e":

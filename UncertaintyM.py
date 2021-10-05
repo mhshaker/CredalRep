@@ -450,7 +450,11 @@ def v_q18_2(set_slice, likelyhoods, epsilon):
 	cons = ({'type': 'eq', 'fun': constarint})
 	b = (_m * (1 / epsilon), _m * epsilon) # (_m - epsilon, _m + epsilon) addetive constraint
 	bnds = [ b for _ in range(m) ]
-	x0 = get_random_with_constraint(set_slice.shape[1],bnds)
+	# x0 = get_random_with_constraint(set_slice.shape[1],bnds)
+	x0 = np.ones((set_slice.shape[1]))
+	x0_sum = np.sum(x0)
+	x0 = x0 / x0_sum
+
 
 	s_min = []
 	for data_point_prob in set_slice:	
@@ -631,7 +635,11 @@ def maxent18(probs, likelyhoods, epsilon):
 	cons = ({'type': 'eq', 'fun': constarint})
 	b = (_m * (1 / epsilon), _m * epsilon) # (_m - epsilon, _m + epsilon) addetive constraint
 	bnds = [ b for _ in range(m) ]
-	x0 = get_random_with_constraint(probs.shape[1],bnds)
+	# x0 = get_random_with_constraint(probs.shape[1],bnds)
+	x0 = np.ones((probs.shape[1]))
+	x0_sum = np.sum(x0)
+	x0 = x0 / x0_sum
+
 
 	s_max = []
 	for data_point_prob in probs:	
@@ -756,6 +764,11 @@ def uncertainty_set14_convex(probs,bootstrap_size=0):
 	else:
 		p = probs
 	cons = ({'type': 'eq', 'fun': constarint})
+
+	# m  = probs.shape[1]
+	# _m = 1/m
+	# epsilon = 1
+	# b = (_m * (1 / epsilon), _m * epsilon)
 	b = (0.0, 1.0)
 	bnds = [ b for _ in range(probs.shape[1]) ]
 	x0 = np.ones((probs.shape[1]))
@@ -770,6 +783,7 @@ def uncertainty_set14_convex(probs,bootstrap_size=0):
 
 	s_max = np.array(s_max)
 	gh    = set_gh(p)
+	# gh = set_gh18(p, x0, 1)
 	total = s_max
 	e = gh
 	a = total - e
@@ -1473,6 +1487,36 @@ def roc(probs_list, predictions_list, labels_list, uncertainty_list, unc_value=F
 			# print(correctness_map)
 			# print("Skipping")
 			continue
+		area = metrics.roc_auc_score(correctness_map, uncertainty)
+		area_list.append(area)
+
+	area_list = np.array(area_list)
+	AUROC_mean = area_list.mean()
+	AUROC_std  = area_list.std()
+
+	return AUROC_mean, AUROC_std * 2
+
+def roc_epist(probs_list, predictions_list, labels_list, uncertainty_list, unc_value=False, log=False): # 2D inputs for average plot -> D1: runs D2: uncertainty data
+
+	area_list = []
+
+	for predictions, uncertainty, labels in zip(predictions_list, uncertainty_list, labels_list):
+
+		predictions = np.array(predictions)
+		uncertainty = np.array(uncertainty)
+
+		# correctness_map = []
+		# for x, y in zip(predictions, labels):
+		# 	if x == y:
+		# 		correctness_map.append(0) 
+		# 	else:
+		# 		correctness_map.append(1)
+		correctness_map = np.array(labels)
+
+		if len(np.unique(correctness_map)) == 1:
+			continue
+		# print("------------------------------------ unc and correctness_map shape")
+		# print(correctness_map)
 		area = metrics.roc_auc_score(correctness_map, uncertainty)
 		area_list.append(area)
 

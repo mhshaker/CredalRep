@@ -115,21 +115,21 @@ if __name__ == '__main__':
     runs = 1
     data_name = "Jdata/vertebral"
     algo = "DF"
-    unc_method = "bays"
-    opt_decision_model = False
+    unc_method = "set14.convex"
     prams = {
     'criterion'          : "entropy",
     'max_features'       : "auto",
     'max_depth'          : 10,
-    'n_estimators'       : 10, # 3
-    'n_estimator_predict': 10, # 3
+    'n_estimators'       : 10,
+    'n_estimator_predict': 10,
     'opt_iterations'     : 20,
-    'epsilon'            : 2,
+    'epsilon'            : 1.01,
     'credal_size'        : 999,
     'laplace_smoothing'  : 1,
-    'split'              : 0.30, # 0.025
+    'split'              : 0.30,
     'run_start'          : 0,
-    'cv'                 : 10
+    'cv'                 : 0,
+    'opt_decision_model' : False
     }
 
     base_dir = os.path.dirname(os.path.realpath(__file__))

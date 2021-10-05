@@ -1,7 +1,6 @@
 import os
 import numpy as np
 import UncertaintyM as unc
-import bays_opt as bo
 import random
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.utils import resample
@@ -19,9 +18,9 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
     if len(us) > 1:
         unc_mode = us[1] # spliting the active selection mode (_a _e _t) from the unc method because DF dose not work with that
 
-    if opt_decision_model or unc_method =="set24": # or 27 or 28 or 24mix but they are not good and I dont plan on using them
+    if opt_decision_model or unc_method =="set24" or unc_method =="set25": # or 27 or 28 or 24mix but they are not good and I dont plan on using them
         pram_grid = {
-            "max_depth" :        np.arange(1,50),
+            "max_depth" :        np.arange(1,100),
             # "min_samples_split": np.arange(2,10),
             # "criterion" :        ["gini", "entropy"],
             # "max_features" :     ["auto", "sqrt", "log2"],
@@ -120,9 +119,13 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set15_convex(porb_matrix, pram["credal_size"])
     elif "set18" == unc_method:
         likelyhoods = get_likelyhood(model, x_train, y_train, pram["n_estimators"], pram["laplace_smoothing"])
+        # replace likelyhoods with uniform - just for test
+        # x0 = np.ones((likelyhoods.shape[0]))
+        # x0_sum = np.sum(x0)
+        # x0 = x0 / x0_sum
+        # likelyhoods = x0
+        # print(likelyhoods)
         porb_matrix = get_prob(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
-        # print(">>>> shape ", porb_matrix.shape)
-        # exit()
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set18(porb_matrix, likelyhoods, pram["epsilon"])
     elif "set19" == unc_method:
         likelyhoods = get_likelyhood(model, x_train, y_train, pram["n_estimators"], pram["laplace_smoothing"])
@@ -287,7 +290,7 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
 
         for param in params_searched: # opt_pram_list: 
             model = None
-            model = RandomForestClassifier(**param,random_state=seed)
+            model = RandomForestClassifier(**param,random_state=42) # seed
             model.fit(x_train, y_train)
             
             # test_prob = model.predict_proba(x_test)
@@ -323,12 +326,16 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         likelyhoods = []
         pram_smaple_list = []
 
-        # select top K based on kmeans of 2 clusters, we select the cluster with good results to put in the credal set
-        kmeans = KMeans(n_clusters=2, random_state=seed).fit(params_score.reshape(-1, 1))
-        cluster_result = kmeans.labels_
-        index = np.where(cluster_result == 1)[0][0]
+        # Confidance interval
+        conf_int = params_score_mean[0] -  1 * params_score_std[0] # include SD which is 99%
+        # print("conf_int ", conf_int)
+        index = len(params_score_mean) - 1
+        while params_score_mean[index] < conf_int:
+            index -= 1
+            # print(f"{index}     {params_score_mean[index]} < {conf_int}")
         if index == 0:
-            index = len(params_score)
+            index = 1
+        
         params_searched = params_searched[: index]
         params_rank = params_rank[: index]
         print("cut index ", index)
@@ -339,7 +346,7 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
 
         for param in params_searched: # opt_pram_list: 
             model = None
-            model = RandomForestClassifier(**param,random_state=seed)
+            model = RandomForestClassifier(**param,random_state=42)
             model.fit(x_train, y_train)
             
             # test_prob = model.predict_proba(x_test)
@@ -582,7 +589,7 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
             max_depth=pram["max_depth"],
             n_estimators=pram["n_estimators"],
             max_features= pram["max_features"],
-            random_state=seed,
+            random_state=42, # seed
             verbose=0,
             warm_start=False)
         model.fit(x_train, y_train)
