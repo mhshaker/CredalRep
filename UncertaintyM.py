@@ -14,6 +14,7 @@ from scipy.optimize import minimize_scalar
 from scipy.optimize import linprog
 from scipy.stats import entropy
 from scipy import stats
+from statistics import mean
 import warnings
 random.seed(1)
 
@@ -1374,6 +1375,18 @@ def accuracy_rejection2(predictions_list, labels_list, uncertainty_list, log=Fal
 		std_error = np.std(accuracy_list, axis=0) / math.sqrt(len(uncertainty_list))
 
 	return avg_accuracy, avg_accuracy - std_error, avg_accuracy + std_error, 9999 , steps*100
+
+def order_comparison(uncertainty_list1, uncertainty_list2):
+	tau_list = []
+	for unc1, unc2 in zip(uncertainty_list1, uncertainty_list2):
+		unc1 = np.array(unc1)
+		unc2 = np.array(unc2)
+		sorted_index1 = np.argsort(unc1, kind='stable')
+		sorted_index2 = np.argsort(unc2, kind='stable')
+		tau, p_value = stats.kendalltau(sorted_index1, sorted_index2)
+		tau_list.append(tau)
+	comp = mean(tau_list)
+	return comp
 
 def accuracy_rejection(predictions_list, labels_list, uncertainty_list, unc_value=False, log=False): # 2D inputs for average plot -> D1: runs D2: uncertainty data
 

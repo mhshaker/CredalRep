@@ -22,10 +22,12 @@ job_id         = False
 in_plot_legend = True
 legend_flag    = False
 
-data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "QSAR", "spambase"]  #, "blod", "bank"
+kendalltau     = True 
+
+# data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "QSAR", "spambase"]  #, "blod", "bank"
 # data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod"] 
 # data_list = ["climate", "parkinsons", "spambase"]
-# data_list = ["climate"]
+data_list = ["climate"]
 modes     = "eat"
 
 for data in data_list:
@@ -161,7 +163,7 @@ for data in data_list:
                 run_result = np.loadtxt(dir_l+"/"+f)
                 all_runs_l.append(run_result)
 
-            avg_acc, avg_min, avg_max, avg_random , steps = unc.accuracy_rejection2(all_runs_p,all_runs_l,all_runs_unc, unc_value_plot)
+            avg_acc, avg_min, avg_max, avg_random ,steps = unc.accuracy_rejection2(all_runs_p,all_runs_l,all_runs_unc, unc_value_plot)
 
             # print(">>>>>>>>", avg_acc)
             linestyle = '-'
