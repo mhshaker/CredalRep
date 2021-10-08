@@ -4,6 +4,7 @@ import os
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.stats.stats import kendalltau
 import UncertaintyM as unc
 import warnings
 
@@ -12,7 +13,7 @@ pic_dir = f"{base_dir}/pic/unc"
 if not os.path.exists(pic_dir):
     os.makedirs(pic_dir)
 
-unc_value_plot = False
+job_id = True
 local = False
 color_correct = False
 vertical_plot = True
@@ -70,6 +71,11 @@ for data in data_list:
 
             legend = ""
 
+            for text in job[3:]:
+                legend += " " +str(text) 
+            if job_id:
+                legend += " (" + str(job[1]) + ")"
+
             # get the list of file names
             file_list = []
             for (dirpath, dirnames, filenames) in os.walk(dir_mode):
@@ -82,7 +88,10 @@ for data in data_list:
                 all_runs_unc1.append(run_result)
 
             job_plots.append(all_runs_unc1)
+            job_legends.append(legend)
+
         plot_value1.append(job_plots)
+        legend_value1.append(job_legends)
 
 
 
@@ -97,7 +106,7 @@ for data in data_list:
     # print("second query ", len(jobs))
     plot_list = []
     legend_list = []
-    for job, plot_value in zip(jobs, plot_value1):
+    for job, plot_value, legend_value in zip(jobs, plot_value1, legend_value1):
         dir = job[0]
         if dir[0] == ".":
             dir = base_dir + dir[1:]
@@ -110,11 +119,22 @@ for data in data_list:
                 exit()
         plot_list.append(job[1])
 
+        kendalltau_e_t = unc.order_comparison(np.array(plot_value[0]), np.array(plot_value[2]))
+        kendalltau_a_t = unc.order_comparison(np.array(plot_value[1]), np.array(plot_value[2]))
+        kendalltau_e_a = unc.order_comparison(np.array(plot_value[0]), np.array(plot_value[1]))
+
+        print(f"{legend_value[0]} kendalltau -> e_t {kendalltau_e_t} a_t {kendalltau_a_t} e_a {kendalltau_e_a}")
+
         for mode_index, mode in enumerate(modes):
             # print(f"mode {mode} dir {dir}")
             dir_mode = dir + "/" + mode
 
             legend = ""
+
+            for text in job[3:]:
+                legend += " " +str(text) 
+            if job_id:
+                legend += " (" + str(job[1]) + ")"
 
             # get the list of file names
             file_list = []
@@ -127,4 +147,4 @@ for data in data_list:
                 run_result = np.loadtxt(dir_mode+"/"+f)
                 all_runs_unc2.append(run_result)
             comp_res = unc.order_comparison(np.array(plot_value[mode_index]), np.array(all_runs_unc2))
-            print("comp_res ", comp_res)
+            print(f" {mode} {legend_value[mode_index]} to {legend} -> kendal tau ", comp_res)
