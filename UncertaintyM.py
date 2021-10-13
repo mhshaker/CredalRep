@@ -411,6 +411,7 @@ def uncertainty_set17(probs, bootstrap_size=0, sampling_size=0, credal_size=0, l
 
 
 def v_q_a(s, l, p):
+	# print(" the prob in the min opt ", p.shape)
 	s = np.reshape(s,(-1,1))
 	l = np.reshape(l,(-1,1))
 	# print("------------------------------------ [start of V_Q_A]")
@@ -427,10 +428,10 @@ def v_q_a(s, l, p):
 	# print(s_l)
 	# print("------------------------------------first sum for m")
 	s_l_p_sum  = np.sum(s_l_p, axis=0)
-	# print(s_l_p_sum)
+	# print("s_l_p_sum ", s_l_p_sum)
 	# print("------------------------------------second sum for j")
 	s_l_p_j_sum = np.sum(s_l_p_sum, axis=0)
-	# print(s_l_p_j_sum)
+	# print("s_l_p_j_sum ", s_l_p_j_sum)
 
 	s_l_sum = np.sum(s_l)
 	# print(s_l_sum)
@@ -441,6 +442,7 @@ def v_q_a(s, l, p):
 	return z
 
 def v_q18_2(set_slice, likelyhoods, epsilon):
+	# print(" >>>>>>>>>>>>>>>>>>>>>>>> v_q ")
 	m  = len(likelyhoods)
 	_m = 1/m
 
@@ -449,18 +451,23 @@ def v_q18_2(set_slice, likelyhoods, epsilon):
 	# print("------------------------------------")
 
 	cons = ({'type': 'eq', 'fun': constarint})
-	b = (_m * (1 / epsilon), _m * epsilon) # (_m - epsilon, _m + epsilon) addetive constraint
+	# b = (_m * (1 / epsilon), _m * epsilon) # (_m - epsilon, _m + epsilon) addetive constraint
+	b = (1 / (m * epsilon), epsilon/m) # The bound as it is in the paper. The line above does not match with the bounds in the paper
 	bnds = [ b for _ in range(m) ]
 	# x0 = get_random_with_constraint(set_slice.shape[1],bnds)
 	x0 = np.ones((set_slice.shape[1]))
 	x0_sum = np.sum(x0)
 	x0 = x0 / x0_sum
+	# print(f"set_slice v_q {set_slice}")
+	# print(f"x0 {x0}")
 
 
 	s_min = []
 	for data_point_prob in set_slice:	
 		sol_min = minimize(v_q_a, x0, args=(likelyhoods,data_point_prob), method='SLSQP', bounds=bnds, constraints=cons)
 		s_min.append(sol_min.fun)
+
+		# print(f"opt min {sol_min.fun}")
 
 		####### sanity test on S^* and S_*
 		
@@ -477,6 +484,7 @@ def v_q18_2(set_slice, likelyhoods, epsilon):
 
 		####### end test (test passed)
 
+	# print(" >>>>>>>>>>>>>>>>>>>>>>>> v_q end")
 
 	res = np.array(s_min)
 	return res
@@ -571,22 +579,31 @@ def m_q18(probs, likelyhoods, epsilon):
 	subsets = findallsubsets(index_set) # this is B in the paper
 	set_A = subsets[-1]
 
+	# print("######################################## m_q")
+	# print(f"probs {probs.shape}")
+	# print(f"subsets {subsets}")
 	for set_B in subsets:
 		set_slice = probs[:,:,list(set_B)]
+		# print(f"set_slice m_q {set_slice.shape}")
 		set_minus = set_A - set_B
 		# m_q_set = v_q18(set_slice, likelyhoods, epsilon) * ((-1) ** len(set_minus))
 		m_q_set = v_q18_2(set_slice, likelyhoods, epsilon) * ((-1) ** len(set_minus))
 		# print(f">>> {set_B}		 {m_q_set}")
 		res += m_q_set
+	# print("######################################## m_q end")
 	return res
 
 def set_gh18(probs, likelyhoods, epsilon):
+	# print("[debug] >>>> ", probs.shape)
+	
 	res = np.zeros(probs.shape[0])
 	index_set = set(range(probs.shape[2]))
 	subsets = findallsubsets(index_set) # these subests are A in the paper
-
+	# print("[debug] >>>> subsets  ",subsets)
 	for subset in subsets:
 		set_slice = probs[:,:,list(subset)]
+		# print("[debug] >>>> slice  ", set_slice.shape)
+		# dkjhekjbd
 		m_q_slice = m_q18(set_slice, likelyhoods, epsilon)
 		res += m_q_slice * math.log2(len(subset))
 	return res
@@ -634,7 +651,10 @@ def maxent18(probs, likelyhoods, epsilon):
 	_m = 1/m
 
 	cons = ({'type': 'eq', 'fun': constarint})
-	b = (_m * (1 / epsilon), _m * epsilon) # (_m - epsilon, _m + epsilon) addetive constraint
+	# b = (_m * (1 / epsilon), _m * epsilon) # (_m - epsilon, _m + epsilon) addetive constraint
+	b = (1 / (m * epsilon), epsilon/m) # The bound as it is in the paper. The line above does not match with the bounds in the paper
+	print(f" epsilon {epsilon} GH bounds ", b)
+
 	bnds = [ b for _ in range(m) ]
 	# x0 = get_random_with_constraint(probs.shape[1],bnds)
 	x0 = np.ones((probs.shape[1]))
@@ -673,7 +693,9 @@ def minent19(probs, likelyhoods, epsilon):
 	_m = 1/m
 
 	cons = ({'type': 'eq', 'fun': constarint})
-	b = (_m * (1 / epsilon), _m * epsilon) # (_m - epsilon, _m + epsilon) addetive constraint
+	# b = (_m * (1 / epsilon), _m * epsilon) # (_m - epsilon, _m + epsilon) addetive constraint
+	b = (1 / (m * epsilon), epsilon/m) # The bound as it is in the paper. The line above does not match with the bounds in the paper
+
 	bnds = [ b for _ in range(m) ]
 	x0 = get_random_with_constraint(probs.shape[1],bnds)
 

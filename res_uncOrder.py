@@ -27,11 +27,11 @@ for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name  = "wuml21_2" # "ens_size_UAI"
-    plot_name = "order_comp" + data # "RensEnt-" + data 
-    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
-    query1       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}' AND result_type='bays'"
-    query2       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}' AND result_type='set18'"
+    run_name  = "s_delta_GHvalue_test" # "ens_size_UAI"
+    # query1       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}' AND result_type='bays'"
+    # query2       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}' AND result_type='set18'"
+    query1       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=5939" 
+    query2       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=5940" 
 
 
     ########################################################################################################################################################
@@ -123,7 +123,7 @@ for data in data_list:
         kendalltau_a_t = unc.order_comparison(np.array(plot_value[1]), np.array(plot_value[2]))
         kendalltau_e_a = unc.order_comparison(np.array(plot_value[0]), np.array(plot_value[1]))
 
-        print(f"{legend_value[0]} kendalltau -> e_t {kendalltau_e_t} a_t {kendalltau_a_t} e_a {kendalltau_e_a}")
+        print(f"{legend_value[0]} kendalltau -> e_t {kendalltau_e_t:.2f} a_t {kendalltau_a_t:.2f} e_a {kendalltau_e_a:.2f}")
 
         for mode_index, mode in enumerate(modes):
             # print(f"mode {mode} dir {dir}")
@@ -147,4 +147,4 @@ for data in data_list:
                 run_result = np.loadtxt(dir_mode+"/"+f)
                 all_runs_unc2.append(run_result)
             comp_res = unc.order_comparison(np.array(plot_value[mode_index]), np.array(all_runs_unc2))
-            print(f" {mode} {legend_value[mode_index]} to {legend} -> kendal tau ", comp_res)
+            print(f" {mode} {legend_value[mode_index]} to {legend} -> kendal tau {comp_res:.2f}")

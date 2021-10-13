@@ -19,10 +19,10 @@ color_correct = True
 legend_flag = False
 
 # data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod", "bank", "QSAR", "spambase"] 
-data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "QSAR", "spambase"] 
+# data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "QSAR", "spambase"] 
 # data_list = ["climate", "parkinsons", "spambase"]
 # data_list = ["climate", "vertebral"]
-# data_list = ["parkinsons"]
+data_list = ["parkinsons"]
 modes     = "eat"
 
 for data in data_list:
@@ -31,9 +31,8 @@ for data in data_list:
 
     # run_name  = "ROC_area"
     # plot_name = data + "_dist"
-    run_name   = "wuml21_2"
-    run_name2  = "presentation100"
-    plot_name = data + "_dist"
+    run_name   = "bound_observ3"
+    plot_name = data + "bound_observ3_dist"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND ((run_name='{run_name}' AND (result_type='set20' OR result_type='set21')) OR (run_name='{run_name2}' AND (result_type='bays' OR result_type='set18' OR result_type='set19')))"
 
     query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND run_name='{run_name}'"
@@ -106,6 +105,13 @@ for data in data_list:
             for text in job[3:]:
                 legend += " " +str(text) 
             # legend += mode   
+            prams = str(job[2])
+            pram_name = "epsilon"
+            search_pram = f"'{pram_name}': "
+            v_index_s = prams.index(search_pram)
+            v_index_e = prams.index(",", v_index_s)
+            max_depth = prams[v_index_s+len(search_pram) : v_index_e]
+            legend += " delta: " + str(max_depth)
 
             # get the list of file names
             file_list = []
