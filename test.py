@@ -1,6 +1,6 @@
-import scipy.stats as stats
-x1 = [1,2,3,4,5]
-x2 = [5,4,3,2,1]
-tau, p_value = stats.kendalltau(x1, x2)
-print(tau)
-print(p_value)
+import numpy as np
+
+
+x = np.array([10.2234,20.94,30,40,50,60,70,80,90])
+x = np.round(x, 2)
+print(x)

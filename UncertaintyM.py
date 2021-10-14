@@ -1398,6 +1398,47 @@ def accuracy_rejection2(predictions_list, labels_list, uncertainty_list, log=Fal
 
 	return avg_accuracy, avg_accuracy - std_error, avg_accuracy + std_error, 9999 , steps*100
 
+def unc_heat_map(predictions_list, labels_list, epist_list, ale_list, log=False):
+	unc = np.array(epist_list)
+	heat_all = np.zeros((unc.shape[0], unc.shape[1], unc.shape[1]))
+	rej = np.zeros((2, unc.shape[1]))
+
+	run_index = 0
+	for predictions, epist, ale, labels in zip(predictions_list, epist_list, ale_list, labels_list):
+		
+		predictions = np.array(predictions)
+		epist = np.array(epist)
+		ale = np.array(ale)
+
+		correctness_map = []
+		for x, y in zip(predictions, labels):
+			if x == y:
+				correctness_map.append(1)
+			else:
+				correctness_map.append(0)
+
+		correctness_map    = np.array(correctness_map)
+		sorted_index_epist = np.argsort(-epist, kind='stable')
+		sorted_index_ale   = np.argsort(-ale, kind='stable')
+
+		for i in range(len(epist)):
+
+			sorted_index_epist_t = sorted_index_epist[i:]
+			
+			for j in range(len(ale)):
+				sorted_index_ale_t = sorted_index_ale[j:] # filter based on aleatoric uncertainty
+				intersection_index = np.intersect1d(sorted_index_ale_t, sorted_index_epist_t) # intersection of ale and epist
+				t_correctness = correctness_map[intersection_index]
+				acc = t_correctness.sum() / len(t_correctness)
+				heat_all[run_index][len(ale)-1-j][i] = acc
+				rej[0][j] =  j / len(ale)
+				rej[1][i] = (len(ale) - i) / len(ale)
+		run_index += 1
+	heat = np.mean(heat_all, axis=0)
+	rej = rej * 100
+	rej = np.round(rej, 1)
+	return heat, rej
+
 def order_comparison(uncertainty_list1, uncertainty_list2):
 	tau_list = []
 	for unc1, unc2 in zip(uncertainty_list1, uncertainty_list2):
