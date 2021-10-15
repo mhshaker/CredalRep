@@ -34,9 +34,9 @@ for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name   = "heat_map"
-    result_type = "set19"
-    plot_name = data + "_heat_" + result_type
+    run_name   = "heat_map_set18_1.01"
+    result_type = "set18"
+    plot_name = data + "_heat_" + result_type + "_1.01"
     query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND run_name='{run_name}' AND result_type='{result_type}'"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=5964" 
 
