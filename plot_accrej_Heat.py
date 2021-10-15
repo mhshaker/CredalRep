@@ -27,7 +27,7 @@ legend_flag    = False
 kendalltau     = True 
 
 # data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "QSAR", "spambase"]  #, "blod", "bank"
-# data_list = ["spambase"]
+data_list = ["spambase"]
 modes     = "eat"
 
 for data in data_list:
