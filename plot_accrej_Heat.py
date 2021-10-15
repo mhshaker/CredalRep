@@ -26,8 +26,8 @@ legend_flag    = False
 
 kendalltau     = True 
 
-# data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "QSAR", "spambase"]  #, "blod", "bank"
-data_list = ["spambase"]
+data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "QSAR"]  #, , "spambase" "blod", "bank"
+# data_list = ["spambase"]
 modes     = "eat"
 
 for data in data_list:
@@ -35,7 +35,7 @@ for data in data_list:
     # prameters ############################################################################################################################################
 
     run_name   = "heat_map"
-    result_type = "bays"
+    result_type = "set19"
     plot_name = data + "_heat_" + result_type
     query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND run_name='{run_name}' AND result_type='{result_type}'"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=5964" 
