@@ -8,7 +8,7 @@ data_names     = ["Jdata/parkinsons", "Jdata/vertebral","Jdata/ionosphere", "Jda
 # data_names     = ["Jdata/parkinsons"] 
 algos          = ["DF"] # ,"LR"
 # modes          = ["bays", "set18", "set19", "set24", "set25", "out"]
-modes          = ["set18"] # , "set14.convex"
+modes          = ["bays", "bays2"] # , "set14.convex"
 task           = "unc"
 runs           = 20
 prams = {
@@ -31,7 +31,7 @@ prams = {
 for algo in algos:
     for data_name in data_names:
         for mode in modes:
-            run_name       = "heat_map_set18_1" #f"{mode}_{algo}" + "noctua_test" # if you want a specific name give it here
+            run_name       = "bays_willam" #f"{mode}_{algo}" + "noctua_test" # if you want a specific name give it here
             description    = "acc_hist"
 
             mydb = db.connect(host="131.234.250.119", user="noctua", passwd="uncertainty", database="uncertainty")

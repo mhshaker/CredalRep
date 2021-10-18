@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from numpy.core.fromnumeric import ptp
 import pandas as pd
 import matplotlib.pyplot as plt
 import random
@@ -60,6 +61,22 @@ def uncertainty_ent_bays(probs, likelihoods): # three dimentianl array with d1 a
 	total = -np.sum(p_m*np.ma.log2(p_m), axis=1)
 	total = total.filled(0)
 	e = total - a
+	return total, e, a
+
+def uncertainty_ent_bays2(probs, likelihoods): # three dimentianl array with d1 as datapoints, (d2) the rows as samples and (d3) the columns as probability for each class
+	p = np.array(probs)
+	entropy = -p*np.ma.log2(p)
+	entropy = entropy.filled(0)
+
+	a = np.sum(entropy, axis=2)
+	al = a * likelihoods
+	a = np.sum(al, axis=1)
+
+	e = (al.transpose() - a) ** 2
+	e = e.transpose()
+	e = np.sum(e, axis=1)
+
+	total = e + a
 	return total, e, a
 
 

@@ -598,6 +598,22 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         # accs = get_acc(model, x_train, y_train, pram["n_estimators"])
         porb_matrix = get_prob(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_ent_bays(porb_matrix, likelyhoods)
+    elif "bays2" == unc_method:
+        model = None
+        model = RandomForestClassifier(bootstrap=True,
+            criterion=pram['criterion'],
+            max_depth=pram["max_depth"],
+            n_estimators=pram["n_estimators"],
+            max_features= pram["max_features"],
+            random_state=42, # seed
+            verbose=0,
+            warm_start=False)
+        model.fit(x_train, y_train)
+        likelyhoods = get_likelyhood(model, x_train, y_train, pram["n_estimators"], pram["laplace_smoothing"])
+        # print("bays likelyhoods >>>>>>", likelyhoods)
+        # accs = get_acc(model, x_train, y_train, pram["n_estimators"])
+        porb_matrix = get_prob(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
+        total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_ent_bays2(porb_matrix, likelyhoods)
     elif "levi3" in unc_method:
         porb_matrix = get_prob_matrix(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
         porb_matrix = np.array(porb_matrix)
