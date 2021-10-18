@@ -18,25 +18,25 @@ vertical_plot  = False
 single_plot    = False
 
 color_correct  = False
-job_id         = False
+job_id         = True
 in_plot_legend = True
 legend_flag    = False
 
 kendalltau     = True 
 
-# data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "QSAR", "spambase"]  #, "blod", "bank"
+data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "QSAR", "spambase"]  #, "blod", "bank"
 # data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod"] 
 # data_list = ["climate", "parkinsons", "spambase"]
-data_list = ["parkinsons"]
+# data_list = ["parkinsons"]
 modes     = "eat"
 
 for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name   = "bound_observ3"
-    plot_name = data + "_boundObserv"
-    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND run_name='{run_name}' AND (result_type='bays' OR result_type='set18')"
+    run_name   = "bays_willam"
+    plot_name = data + "_bays2"
+    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND run_name='{run_name}'"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=5881 OR id=5883" 
 
     ########################################################################################################################################################
