@@ -1439,17 +1439,35 @@ def unc_heat_map(predictions_list, labels_list, epist_list, ale_list, log=False)
 	rej = np.round(rej, 1)
 	return heat, rej
 
-def order_comparison(uncertainty_list1, uncertainty_list2):
+def order_comparison(uncertainty_list1, uncertainty_list2, log=False):
 	tau_list = []
+	pvalue_list = []
 	for unc1, unc2 in zip(uncertainty_list1, uncertainty_list2):
 		unc1 = np.array(unc1)
 		unc2 = np.array(unc2)
-		sorted_index1 = np.argsort(unc1, kind='stable')
-		sorted_index2 = np.argsort(unc2, kind='stable')
-		tau, p_value = stats.kendalltau(sorted_index1, sorted_index2)
+		sorted_index1 = np.argsort(-unc1, kind='stable')
+		sorted_index2 = np.argsort(-unc2, kind='stable')
+		# unc1 = unc1[sorted_index1]
+		# unc2 = unc2[sorted_index2]
+		# tau, p_value = stats.kendalltau(sorted_index1, sorted_index2)
+		tau, p_value = stats.kendalltau(unc1, unc2)
+		# tau, p_value = stats.spearmanr(sorted_index1, sorted_index2)
+
+		if log:
+			print(sorted_index1)
+			print(sorted_index2)
+			print(unc1)
+			print(unc2)
+			print(f"{tau} pvalue {p_value}")
+			print("------------------------------------")
+			exit()
 		tau_list.append(tau)
+		pvalue_list.append(p_value)
 	comp = mean(tau_list)
-	return comp
+	comp_p = mean(pvalue_list)
+	if log:
+		print(f">>>>>>>>>>>>>>>>>>>>>  {comp} pvalue {comp_p}")
+	return comp, comp_p
 
 def accuracy_rejection(predictions_list, labels_list, uncertainty_list, unc_value=False, log=False): # 2D inputs for average plot -> D1: runs D2: uncertainty data
 
