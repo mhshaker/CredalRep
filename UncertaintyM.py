@@ -74,7 +74,7 @@ def uncertainty_ent_bays2(probs, likelihoods): # three dimentianl array with d1 
 
 	e = (al.transpose() - a) ** 2
 	e = e.transpose()
-	e = np.sum(e, axis=1)
+	e = np.mean(e, axis=1)
 
 	total = e + a
 	return total, e, a

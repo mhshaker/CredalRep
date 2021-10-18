@@ -31,7 +31,7 @@ for data in data_list:
 
     # run_name  = "ROC_area"
     # plot_name = data + "_dist"
-    run_name   = "bays_willam"
+    run_name   = "bays_willam2"
     plot_name = data + "bays2"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND ((run_name='{run_name}' AND (result_type='set20' OR result_type='set21')) OR (run_name='{run_name2}' AND (result_type='bays' OR result_type='set18' OR result_type='set19')))"
 

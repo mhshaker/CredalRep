@@ -34,8 +34,8 @@ for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name   = "bays_willam"
-    plot_name = data + "_bays2"
+    run_name   = "bays_willam2"
+    plot_name = data + "_bays2_2"
     query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND run_name='{run_name}'"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=5881 OR id=5883" 
 
