@@ -670,7 +670,7 @@ def maxent18(probs, likelyhoods, epsilon):
 	cons = ({'type': 'eq', 'fun': constarint})
 	# b = (_m * (1 / epsilon), _m * epsilon) # (_m - epsilon, _m + epsilon) addetive constraint
 	b = (1 / (m * epsilon), epsilon/m) # The bound as it is in the paper. The line above does not match with the bounds in the paper
-	print(f" epsilon {epsilon} GH bounds ", b)
+	# print(f" epsilon {epsilon} GH bounds ", b)
 
 	bnds = [ b for _ in range(m) ]
 	# x0 = get_random_with_constraint(probs.shape[1],bnds)
