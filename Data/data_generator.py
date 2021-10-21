@@ -152,5 +152,5 @@ def circles_data(seed):
     return x, y, x_test
 
 
-moon_data(1)
+# moon_data(1)
 # circles_data(1)
