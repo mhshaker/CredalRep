@@ -63,8 +63,8 @@ if __name__ == '__main__':
                         class_sep=sep,
                         flip_y=0.3, 
                         n_samples=1000, 
-                        n_features=2,
-                        n_informative=2, 
+                        n_features=20,
+                        n_informative=10, 
                         n_redundant=0, 
                         n_repeated=0, 
                         n_classes=2, 
@@ -107,4 +107,4 @@ for mode_index, mode in enumerate(uncertaintymode_list):
         axs[mode_index].set_ylabel(ylabel)
 fig.legend(unc_method)
 fig.subplots_adjust(bottom=0.15)
-fig.savefig(f"./pic/s_data/Seperation_test_10.png")
+fig.savefig(f"./pic/s_data/Seperation_test_10_f20.png")

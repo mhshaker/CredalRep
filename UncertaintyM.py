@@ -74,7 +74,7 @@ def uncertainty_ent_bays2(probs, likelihoods): # three dimentianl array with d1 
 
 	e = (al.transpose() - a) ** 2
 	e = e.transpose()
-	e = np.mean(e, axis=1)
+	e = np.mean(e, axis=1) / probs.shape[2]
 
 	total = e + a
 	return total, e, a
@@ -714,7 +714,10 @@ def minent19(probs, likelyhoods, epsilon):
 	b = (1 / (m * epsilon), epsilon/m) # The bound as it is in the paper. The line above does not match with the bounds in the paper
 
 	bnds = [ b for _ in range(m) ]
-	x0 = get_random_with_constraint(probs.shape[1],bnds)
+	# x0 = get_random_with_constraint(probs.shape[1],bnds)
+	x0 = np.ones((probs.shape[1]))
+	x0_sum = np.sum(x0)
+	x0 = x0 / x0_sum
 
 	s_min = []
 	for data_point_prob in probs:	
@@ -1448,12 +1451,14 @@ def unc_heat_map(predictions_list, labels_list, epist_list, ale_list, log=False)
 				t_correctness = correctness_map[intersection_index]
 				acc = t_correctness.sum() / len(t_correctness)
 				heat_all[run_index][len(ale)-1-j][i] = acc
-				rej[0][j] =  j / len(ale)
-				rej[1][i] = (len(ale) - i) / len(ale)
+				# rej[0][j] =  j / len(ale)  # rejection percentage
+				# rej[1][i] = (len(ale) - i) / len(ale)
+				rej[0][i] =  epist[sorted_index_epist[i]] # uncertainty value
+				rej[1][j] = ale[sorted_index_ale[len(ale) - j - 1]]
 		run_index += 1
 	heat = np.mean(heat_all, axis=0)
-	rej = rej * 100
-	rej = np.round(rej, 1)
+	# rej = rej * 100
+	rej = np.round(rej, 5)
 	return heat, rej
 
 def order_comparison(uncertainty_list1, uncertainty_list2, log=False):

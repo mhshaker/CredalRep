@@ -11,17 +11,18 @@ import matplotlib.pyplot as plt
 
 ######################################################################### Prameters
 # unc_method = ["set18", "set19", "bays"]
-unc_method = ["bays", "bays2", "set18"]
-runs = 5
-data_size_list = np.arange(10, 500, 10)
+unc_method = ["bays", "bays2"]
+runs = 15
+n_class = 2
+data_size_list = np.arange(10, 150, 1)
 uncertaintymode_list = ["Total", "Epistemic", "Aleatoric"] 
 algo = "DF"
 prams = {
 'criterion'          : "entropy",
 'max_features'       : "auto",
 'max_depth'          : 10,
-'n_estimators'       : 10,
-'n_estimator_predict': 10,
+'n_estimators'       : 5,
+'n_estimator_predict': 5,
 'opt_iterations'     : 20,
 'epsilon'            : 2,
 'laplace_smoothing'  : 1,
@@ -50,6 +51,7 @@ if __name__ == '__main__':
     ray.init()
     # all_res = np.zeros((3,len(unc_method),len(data_size_list),runs))
     all_res = []
+    ray_res = []
 
     for seed in range(0,runs):
 
@@ -57,11 +59,11 @@ if __name__ == '__main__':
                 class_sep=0.7,
                 flip_y=0.3, 
                 n_samples=2000, 
-                n_features=20,
+                n_features=40,
                 n_informative=20, 
                 n_redundant=0, 
                 n_repeated=0, 
-                n_classes=2, 
+                n_classes=n_class, 
                 n_clusters_per_class=1, 
                 weights=None, 
                 hypercube=True, 
@@ -83,7 +85,10 @@ if __name__ == '__main__':
                     plt.savefig(f"./pic/s_data/dataset_{i}.png")
                     plt.close()
 
-                all_res.append(ray.get(uncertainty_quantification.remote(seed, x_train_run, x_test, y_train_run, y_test, prams, unc, algo, prams["opt_decision_model"])))
+                ray_res.append(uncertainty_quantification.remote(seed, x_train_run, x_test, y_train_run, y_test, prams, unc, algo, prams["opt_decision_model"]))
+                print("runing")
+    for res in ray_res:
+        all_res.append(ray.get(res))
 
     all_res = np.array(all_res)
     all_res = np.reshape(all_res, (runs, len(unc_method), len(data_size_list) ,3))
@@ -104,4 +109,4 @@ if __name__ == '__main__':
             axs[mode_index].set_ylabel(ylabel)
     fig.legend(unc_method)
     fig.subplots_adjust(bottom=0.15)
-    fig.savefig(f"./pic/s_data/Data_size_test_fix.png")
+    fig.savefig(f"./pic/s_data/Data_size_test_{n_class}Class_M5_bays2.png")

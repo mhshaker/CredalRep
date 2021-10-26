@@ -27,16 +27,16 @@ legend_flag    = False
 kendalltau     = True 
 
 data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "QSAR"]  #, , "spambase" "blod", "bank"
-# data_list = ["spambase"]
+# data_list = ["QSAR"]
 modes     = "eat"
 
 for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name   = "heat_map_set18_1.01"
-    result_type = "set18"
-    plot_name = data + "_heat_" + result_type + "_1.01"
+    run_name   = "heat_map"
+    result_type = "set19"
+    plot_name = data + "_heat_" + result_type 
     query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND run_name='{run_name}' AND result_type='{result_type}'"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=5964" 
 
@@ -141,8 +141,8 @@ for data in data_list:
         heat = heat * 100
         
         sns_plot = sns.heatmap(heat, cbar_kws={'label': 'Accuracy'}, xticklabels=rej_index[0], yticklabels=rej_index[1])
-        plt.xlabel("Epistemic Rejection %")
-        plt.ylabel("Aleatoric Rejection %")
+        plt.xlabel("Epistemic Value")
+        plt.ylabel("Aleatoric Value")
         plt.locator_params(nbins=10)
         sns_plot.figure.savefig(f"./pic/unc/{plot_name}.png",bbox_inches='tight')
         plt.close()
