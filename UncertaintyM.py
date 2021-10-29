@@ -745,12 +745,147 @@ def uncertainty_set19(probs, likelyhoods, epsilon=2, log=False):
 	a = s_min
 	return total, e, a 
 
-# def uncertainty_set20(probs, likelyhoods, epsilon=2, log=False): # credal set with different hyper prameters
-# 	pass
+################################################################################################################################################# set30 same as set18 but without epsilon
 
-# def uncertainty_set21(probs, likelyhoods, epsilon=2, log=False):
-# 	pass
 
+def v_q_a30(p, l):
+	l = np.reshape(l,(-1,1))
+	l_p = l * p
+	l_p_sum  = np.sum(l_p, axis=0)
+	l_p_j_sum = np.sum(l_p_sum, axis=0)
+
+	l_sum = np.sum(l)
+	z = l_p_j_sum / l_sum 
+	return z
+
+def v_q30(set_slice, likelyhoods):
+	print("------------------------------------v_q30")
+	print(f"set_slice.shape {set_slice.shape}")
+
+	cons = ({'type': 'eq', 'fun': constarint})
+
+
+	# print(">>>>>>>>>>>> ", x0)
+	# bnds = []
+	# for class_index in range(probs.shape[2]):
+	# 	b_min = data_point_prob[:,class_index].min()
+	# 	b_max = data_point_prob[:,class_index].max()
+	# 	bnds.append((b_min, b_max))
+	# bnds = [ b for _ in range(m) ]
+	# x0 = np.ones((set_slice.shape[1]))
+	# x0_sum = np.sum(x0)
+	# x0 = x0 / x0_sum
+
+	gh_min = []
+	for data_point_prob in set_slice:	
+		print(data_point_prob.shape)
+		x0_index = random.randint(0,len(likelyhoods)-1)
+		x0 = data_point_prob[x0_index]
+		print("x0", x0)
+		b = (data_point_prob.min() , data_point_prob.max())
+		print("b ", b)
+		sol_min = minimize(v_q_a30, x0, args=(likelyhoods), method='SLSQP', bounds=[b], constraints=cons)
+		gh_min.append(sol_min.fun)
+	res = np.array(gh_min)
+	return res
+
+def m_q30(probs, likelyhoods):
+	res = np.zeros(probs.shape[0])
+	index_set = set(range(probs.shape[2]))
+	subsets = findallsubsets(index_set) # this is B in the paper
+	set_A = subsets[-1]
+
+	for set_B in subsets:
+		set_slice = probs[:,:,list(set_B)]
+		set_minus = set_A - set_B
+		m_q_set = v_q30(set_slice, likelyhoods) * ((-1) ** len(set_minus))
+		res += m_q_set
+	return res
+
+def set_gh30(probs, likelyhoods):
+	
+	res = np.zeros(probs.shape[0])
+	index_set = set(range(probs.shape[2]))
+	subsets = findallsubsets(index_set) # these subests are A in the paper
+	for subset in subsets:
+		set_slice = probs[:,:,list(subset)]
+		m_q_slice = m_q30(set_slice, likelyhoods)
+		res += m_q_slice * math.log2(len(subset))
+	return res
+
+
+
+def convex_ent_max30(p, l):
+	l = np.reshape(l,(-1,1))
+	l_p = l * p
+	l_p_sum = np.sum(l_p, axis=0)
+	l_sum = np.sum(l, axis=0)
+	z = l_p_sum / l_sum # to get the formual for S^* in paper
+	entropy = -z*np.log2(z)
+	entropy_sum = np.sum(entropy)
+	return entropy_sum * -1 # so that we maximize it
+
+def convex_ent_min30(p, l):
+	l = np.reshape(l,(-1,1))
+	l_p = l * p
+	l_p_sum = np.sum(l_p, axis=0)
+	l_sum = np.sum(l, axis=0)
+	z = l_p_sum / l_sum # to get the formual for S^* in paper
+	entropy = -z*np.log2(z)
+	entropy_sum = np.sum(entropy)
+	return entropy_sum
+
+def maxent30(probs, likelyhoods):
+	cons = ({'type': 'eq', 'fun': constarint})
+	s_max = []
+	for data_point_prob in probs:	
+		x0_index = random.randint(0,len(likelyhoods)-1)
+		x0 = data_point_prob[x0_index]
+		bnds = []
+		for class_index in range(probs.shape[2]):
+			b_min = data_point_prob[:,class_index].min()
+			b_max = data_point_prob[:,class_index].max()
+			bnds.append((b_min, b_max))
+		sol_max = minimize(convex_ent_max30, x0, args=(likelyhoods), method='SLSQP', bounds=bnds, constraints=cons)
+		s_max.append(-sol_max.fun)
+	return np.array(s_max)
+
+def minent31(probs, likelyhoods):
+	cons = ({'type': 'eq', 'fun': constarint})
+	s_min = []
+	for data_point_prob in probs:	
+		x0_index = random.randint(0,len(likelyhoods)-1)
+		x0 = data_point_prob[x0_index]
+		bnds = []
+		for class_index in range(probs.shape[2]):
+			b_min = data_point_prob[:,class_index].min()
+			b_max = data_point_prob[:,class_index].max()
+			bnds.append((b_min, b_max))
+		sol_max = minimize(convex_ent_min30, x0, args=(likelyhoods), method='SLSQP', bounds=bnds, constraints=cons)
+		s_min.append(sol_max.fun)
+	return np.array(s_min)
+
+############################################################################
+
+def uncertainty_set30(probs, likelyhoods, log=False): # credal set with different hyper prameters
+	gh = set_gh30(probs, likelyhoods)
+	s_max = maxent30(probs, likelyhoods)
+
+	total = s_max
+	e = gh
+	a = total - e
+	return total, e, a 
+
+def uncertainty_set31(probs, likelyhoods, epsilon=2, log=False):
+	s_max = maxent30(probs, likelyhoods)
+	s_min = minent31(probs, likelyhoods)
+
+	total = s_max
+	e = s_max - s_min
+	a = s_min
+	return total, e, a 
+
+################################################################################################################################################# set mix
 
 def uncertainty_setmix(probs, credal_size=30):
 	p = [] #np.array(probs)
@@ -826,7 +961,7 @@ def uncertainty_set14_convex(probs,bootstrap_size=0):
 
 	s_max = np.array(s_max)
 	gh    = set_gh(p)
-	# gh = set_gh18(p, x0, 1)
+	# gh = set_gh30(p, x0, 1)
 	total = s_max
 	e = gh
 	a = total - e

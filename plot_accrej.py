@@ -24,18 +24,18 @@ legend_flag    = False
 
 kendalltau     = True 
 
-data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "QSAR", "spambase"]  #, "blod", "bank"
+# data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "QSAR", "spambase"]  #, "blod", "bank"
 # data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod"] 
 # data_list = ["climate", "parkinsons", "spambase"]
-# data_list = ["parkinsons"]
+data_list = ["parkinsons"]
 modes     = "eat"
 
 for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name   = "bays_willam2"
-    plot_name = data + "_bays2_2"
+    run_name    = "set31_2"
+    plot_name   = f"{data}_{run_name}"
     query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND run_name='{run_name}'"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=5881 OR id=5883" 
 
@@ -114,13 +114,13 @@ for data in data_list:
                 legend += " " +str(text) 
             # legend += mode   
 
-            prams = str(job[2])
-            pram_name = "epsilon"
-            search_pram = f"'{pram_name}': "
-            v_index_s = prams.index(search_pram)
-            v_index_e = prams.index(",", v_index_s)
-            max_depth = prams[v_index_s+len(search_pram) : v_index_e]
-            legend += " delta: " + str(max_depth)
+            # prams = str(job[2])
+            # pram_name = "epsilon"
+            # search_pram = f"'{pram_name}': "
+            # v_index_s = prams.index(search_pram)
+            # v_index_e = prams.index(",", v_index_s)
+            # max_depth = prams[v_index_s+len(search_pram) : v_index_e]
+            # legend += " delta: " + str(max_depth)
 
             # prams = str(job[2])
             # pram_name = "opt_iterations"
