@@ -115,7 +115,7 @@ if __name__ == '__main__':
     runs = 1
     data_name = "Jdata/parkinsons"
     algo = "DF"
-    unc_method = "set30"
+    unc_method = "set32"
     prams = {
     'criterion'          : "entropy",
     'max_features'       : "auto",

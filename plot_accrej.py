@@ -34,10 +34,10 @@ for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name    = "set31_2"
-    plot_name   = f"{data}_{run_name}"
-    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND run_name='{run_name}'"
-    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=5881 OR id=5883" 
+    run_name    = "set30_31"
+    plot_name   = f"{data}_{run_name}_comp"
+    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND run_name='{run_name}'"
+    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=6042 OR id=6046 OR id=6048 OR id=6045" 
 
     ########################################################################################################################################################
 

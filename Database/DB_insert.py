@@ -8,7 +8,7 @@ auto_run = False
 data_names     = ["Jdata/parkinsons"] 
 algos          = ["DF"] # ,"LR"
 # modes          = ["bays", "set18", "set19", "set24", "set25", "out"]
-modes          = ["bays"] # , "set14.convex"
+modes          = ["set32"] # , "set14.convex"
 task           = "unc"
 runs           = 20
 prams = {
@@ -31,7 +31,7 @@ prams = {
 for algo in algos:
     for data_name in data_names:
         for mode in modes:
-            run_name       = "set31_2" #f"{mode}_{algo}" + "noctua_test" # if you want a specific name give it here
+            run_name       = "set30_31" #f"{mode}_{algo}" + "noctua_test" # if you want a specific name give it here
             description    = "acc_hist"
 
             mydb = db.connect(host="131.234.250.119", user="noctua", passwd="uncertainty", database="uncertainty")

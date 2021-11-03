@@ -27,11 +27,11 @@ for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name  = "s_delta_GHvalue_test" # "ens_size_UAI"
+    run_name  = "set31_31" # "ens_size_UAI"
     # query1       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}' AND result_type='bays'"
     # query2       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}' AND result_type='set18'"
-    query1       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=6001" 
-    query2       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=6008" 
+    query1       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=6046" 
+    query2       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=6047" 
 
 
     ########################################################################################################################################################
@@ -86,7 +86,6 @@ for data in data_list:
             for f in file_list:
                 run_result = np.loadtxt(dir_mode+"/"+f)
                 all_runs_unc1.append(run_result)
-
             job_plots.append(all_runs_unc1)
             job_legends.append(legend)
 

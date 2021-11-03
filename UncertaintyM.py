@@ -748,68 +748,49 @@ def uncertainty_set19(probs, likelyhoods, epsilon=2, log=False):
 ################################################################################################################################################# set30 same as set18 but without epsilon
 
 
-def v_q_a30(p, l):
+def v_q_a30(p, l, class_index_list):
 	l = np.reshape(l,(-1,1))
 	l_p = l * p
 	l_p_sum  = np.sum(l_p, axis=0)
-	l_p_j_sum = np.sum(l_p_sum, axis=0)
+	l_p_j_sum = l_p_sum[class_index_list].sum(axis=0) # np.sum(l_p_sum, axis=0)
 
 	l_sum = np.sum(l)
 	z = l_p_j_sum / l_sum 
 	return z
 
-def v_q30(set_slice, likelyhoods):
-	print("------------------------------------v_q30")
-	print(f"set_slice.shape {set_slice.shape}")
-
+def v_q30(subset_subset, likelyhoods, probs):
 	cons = ({'type': 'eq', 'fun': constarint})
-
-
-	# print(">>>>>>>>>>>> ", x0)
-	# bnds = []
-	# for class_index in range(probs.shape[2]):
-	# 	b_min = data_point_prob[:,class_index].min()
-	# 	b_max = data_point_prob[:,class_index].max()
-	# 	bnds.append((b_min, b_max))
-	# bnds = [ b for _ in range(m) ]
-	# x0 = np.ones((set_slice.shape[1]))
-	# x0_sum = np.sum(x0)
-	# x0 = x0 / x0_sum
-
 	gh_min = []
-	for data_point_prob in set_slice:	
-		print(data_point_prob.shape)
+	for data_point_prob in probs:	
 		x0_index = random.randint(0,len(likelyhoods)-1)
 		x0 = data_point_prob[x0_index]
-		print("x0", x0)
-		b = (data_point_prob.min() , data_point_prob.max())
-		print("b ", b)
-		sol_min = minimize(v_q_a30, x0, args=(likelyhoods), method='SLSQP', bounds=[b], constraints=cons)
+		bnds = []
+		for class_index in range(probs.shape[2]):
+			b_min = data_point_prob[:,class_index].min()
+			b_max = data_point_prob[:,class_index].max()
+			bnds.append((b_min, b_max))
+		sol_min = minimize(v_q_a30, x0, args=(likelyhoods,subset_subset), method='SLSQP', bounds=bnds, constraints=cons)
 		gh_min.append(sol_min.fun)
 	res = np.array(gh_min)
 	return res
 
-def m_q30(probs, likelyhoods):
-	res = np.zeros(probs.shape[0])
-	index_set = set(range(probs.shape[2]))
-	subsets = findallsubsets(index_set) # this is B in the paper
+def m_q30(class_subset, likelyhoods, probs):
+	res = np.zeros(probs.shape[0]) # FFFFFFFIIIIIXXXXXX
+	subsets = findallsubsets(class_subset) # this is B in the paper
 	set_A = subsets[-1]
 
 	for set_B in subsets:
-		set_slice = probs[:,:,list(set_B)]
 		set_minus = set_A - set_B
-		m_q_set = v_q30(set_slice, likelyhoods) * ((-1) ** len(set_minus))
+		m_q_set = v_q30(list(set_B), likelyhoods ,probs) * ((-1) ** len(set_minus))
 		res += m_q_set
 	return res
 
 def set_gh30(probs, likelyhoods):
-	
 	res = np.zeros(probs.shape[0])
 	index_set = set(range(probs.shape[2]))
 	subsets = findallsubsets(index_set) # these subests are A in the paper
 	for subset in subsets:
-		set_slice = probs[:,:,list(subset)]
-		m_q_slice = m_q30(set_slice, likelyhoods)
+		m_q_slice = m_q30(subset, likelyhoods, probs) # probs is only passed in to claculate the bounds later
 		res += m_q_slice * math.log2(len(subset))
 	return res
 
