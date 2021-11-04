@@ -17,7 +17,7 @@ local          = False
 vertical_plot  = False
 single_plot    = False
 
-color_correct  = False
+color_correct  = True
 job_id         = True
 in_plot_legend = True
 legend_flag    = False
@@ -34,10 +34,10 @@ for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name    = "set30_31"
-    plot_name   = f"{data}_{run_name}_comp"
-    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND run_name='{run_name}'"
-    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=6042 OR id=6046 OR id=6048 OR id=6045" 
+    run_name    = "set30_convexVSnon"
+    plot_name   = f"{data}_{run_name}"
+    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND run_name='{run_name}'"
+    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=6049 OR id=6046" 
 
     ########################################################################################################################################################
 
@@ -171,7 +171,7 @@ for data in data_list:
                 linestyle = '--'
             if "set21" in legend:
                 linestyle = '--'
-            if "set25" in legend:
+            if "convex" in legend:
                 linestyle = '--'
             # if "out" in legend:
             #     linestyle = ':'
@@ -214,6 +214,10 @@ for data in data_list:
                 if "set24" in legend:
                     color = "red"
                 if "set25" in legend:
+                    color = "red"
+                if "set30" in legend:
+                    color = "blue"
+                if "set31" in legend:
                     color = "red"
                 if "out" in legend:
                     color = "black"

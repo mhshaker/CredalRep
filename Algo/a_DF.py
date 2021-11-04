@@ -18,7 +18,7 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
     if len(us) > 1:
         unc_mode = us[1] # spliting the active selection mode (_a _e _t) from the unc method because DF dose not work with that
 
-    if opt_decision_model or unc_method =="set24" or unc_method =="set25" or unc_method =="set30" or unc_method =="set31" or unc_method =="set32": # or 27 or 28 or 24mix but they are not good and I dont plan on using them
+    if opt_decision_model or unc_method =="set24" or unc_method =="set25" or "set30" in unc_method or "set31" in unc_method or unc_method =="set32": # or 27 or 28 or 24mix but they are not good and I dont plan on using them
         pram_grid = {
             "max_depth" :        np.arange(1,100),
             # "min_samples_split": np.arange(2,10),
@@ -522,6 +522,34 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         
     elif "set30" == unc_method: # GH convex credal set from hyper forests
         credal_prob_matrix = []
+
+        for param in params_searched: # opt_pram_list: 
+            model = None
+            model = RandomForestClassifier(**param,random_state=seed)
+            model.fit(x_train, y_train)
+            test_prob = model.predict_proba(x_test)
+            credal_prob_matrix.append(test_prob)
+
+        porb_matrix = np.array(credal_prob_matrix)
+        porb_matrix = porb_matrix.transpose([1,0,2]) # convert to the format that uncertainty_set14 uses ## laplace smoothing has no effect on set20
+        total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set14(porb_matrix)
+
+    elif "set31" == unc_method: # Ent version of set30
+        credal_prob_matrix = []
+        likelyhoods = []
+
+        for param in params_searched: # opt_pram_list: 
+            model = None
+            model = RandomForestClassifier(**param,random_state=seed)
+            model.fit(x_train, y_train)
+            test_prob = model.predict_proba(x_test)
+            credal_prob_matrix.append(test_prob)
+
+        porb_matrix = np.array(credal_prob_matrix)
+        porb_matrix = porb_matrix.transpose([1,0,2]) # convert to the format that uncertainty_set14 uses ## laplace smoothing has no effect on set20
+        total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set15(porb_matrix)
+    elif "set30.convex" == unc_method: # GH convex credal set from hyper forests
+        credal_prob_matrix = []
         likelyhoods = []
 
         for param in params_searched: # opt_pram_list: 
@@ -537,7 +565,7 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         porb_matrix = porb_matrix.transpose([1,0,2]) # convert to the format that uncertainty_set14 uses ## laplace smoothing has no effect on set20
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set30(porb_matrix, likelyhoods)
 
-    elif "set31" == unc_method: # Ent version of set30
+    elif "set31.convex" == unc_method: # Ent version of set30
         credal_prob_matrix = []
         likelyhoods = []
 
