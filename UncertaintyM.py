@@ -235,14 +235,20 @@ def findallsubsets(s):
     return res
 
 def v_q(set_slice):
+	# print("------------------------------------v_q 14")
+	# print(set_slice)
+	# print(set_slice.shape)
 	# sum
 	sum_slice = np.sum(set_slice, axis=2)
 	# min
-	# print("v_q res before min  >>>>>>>> \n", sum_slice, sum_slice.shape)
+	# print("------------------------------------ sum_slice")
+	# print(sum_slice)
+	# print(sum_slice.shape)
 
 	min_slice = np.min(sum_slice, axis=1)
-	# print("v_q set_slice >>>>>>>> \n", set_slice, set_slice.shape)
-	# print("v_q set14 >>>>>>>> ", min_slice.shape)
+	# print("------------------------------------ min_slice")
+	# print(min_slice)
+	# print(min_slice.shape)
 	return min_slice
 
 def m_q(probs):
@@ -749,26 +755,36 @@ def uncertainty_set19(probs, likelyhoods, epsilon=2, log=False):
 
 
 def v_q_a30(p, l, class_index_list):
-	l = np.reshape(l,(-1,1))
-	l_p = l * p
-	l_p_sum  = np.sum(l_p, axis=0)
-	l_p_j_sum = l_p_sum[class_index_list].sum(axis=0) # np.sum(l_p_sum, axis=0)
+	
+	# l = np.reshape(l,(-1,1))
+	# l_p = l * p
+	# l_p_sum  = np.sum(l_p, axis=0)
+	# l_p_j_sum = l_p_sum[class_index_list].sum(axis=0) # np.sum(l_p_sum, axis=0)
 
-	l_sum = np.sum(l)
-	z = l_p_j_sum / l_sum 
-	return z
+	# l_sum = np.sum(l)
+	# z = l_p_j_sum / l_sum 
+	p_sum = p[class_index_list].sum(axis=0)
+
+	return p_sum
 
 def v_q30(subset_subset, likelyhoods, probs):
 	cons = ({'type': 'eq', 'fun': constarint})
 	gh_min = []
-	for data_point_prob in probs:	
+	for data_index, data_point_prob in enumerate(probs):	
 		x0_index = random.randint(0,len(likelyhoods)-1)
 		x0 = data_point_prob[x0_index]
 		bnds = []
 		for class_index in range(probs.shape[2]):
-			b_min = data_point_prob[:,class_index].min()
-			b_max = data_point_prob[:,class_index].max()
+			b_min = 0
+			b_max = 1
+			if class_index in subset_subset:
+				b_min = data_point_prob[:,class_index].min()
+				b_max = data_point_prob[:,class_index].max()
 			bnds.append((b_min, b_max))
+		if data_index == 0:
+			print("------------------------------------bounds")
+			print(subset_subset)
+			print(bnds)
 		sol_min = minimize(v_q_a30, x0, args=(likelyhoods,subset_subset), method='SLSQP', bounds=bnds, constraints=cons)
 		gh_min.append(sol_min.fun)
 	res = np.array(gh_min)
@@ -850,6 +866,7 @@ def minent31(probs, likelyhoods):
 
 def uncertainty_set30(probs, likelyhoods, log=False): # credal set with different hyper prameters
 	gh = set_gh30(probs, likelyhoods)
+	# gh = set_gh(probs) # non convex
 	s_max = maxent30(probs, likelyhoods)
 
 	total = s_max
