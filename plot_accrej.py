@@ -34,10 +34,10 @@ for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name    = "set30_convexVSnon"
+    run_name    = "set30_convexGHbounds"
     plot_name   = f"{data}_{run_name}"
-    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND run_name='{run_name}'"
-    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=6049 OR id=6046" 
+    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND run_name='{run_name}'"
+    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=6053 OR id=6055" 
 
     ########################################################################################################################################################
 

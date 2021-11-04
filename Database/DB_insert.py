@@ -8,7 +8,8 @@ auto_run = False
 data_names     = ["Jdata/parkinsons"] 
 algos          = ["DF"] # ,"LR"
 # modes          = ["bays", "set18", "set19", "set24", "set25", "out"]
-modes          = ["bays", "set30", "set31", "set30.convex", "set31.convex"] # , "set14.convex"
+# modes          = ["bays", "set30", "set31", "set30.convex", "set31.convex"] # , "set14.convex"
+modes          = ["set30.convex"] # , "set14.convex"
 task           = "unc"
 runs           = 20
 prams = {
@@ -31,7 +32,7 @@ prams = {
 for algo in algos:
     for data_name in data_names:
         for mode in modes:
-            run_name       = "set30_convexVSnon" #f"{mode}_{algo}" + "noctua_test" # if you want a specific name give it here
+            run_name       = "set30_GHconvex_fix" #f"{mode}_{algo}" + "noctua_test" # if you want a specific name give it here
             description    = "acc_hist"
 
             mydb = db.connect(host="131.234.250.119", user="noctua", passwd="uncertainty", database="uncertainty")

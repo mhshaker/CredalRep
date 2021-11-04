@@ -781,10 +781,6 @@ def v_q30(subset_subset, likelyhoods, probs):
 				b_min = data_point_prob[:,class_index].min()
 				b_max = data_point_prob[:,class_index].max()
 			bnds.append((b_min, b_max))
-		if data_index == 0:
-			print("------------------------------------bounds")
-			print(subset_subset)
-			print(bnds)
 		sol_min = minimize(v_q_a30, x0, args=(likelyhoods,subset_subset), method='SLSQP', bounds=bnds, constraints=cons)
 		gh_min.append(sol_min.fun)
 	res = np.array(gh_min)
