@@ -11,7 +11,7 @@ from sklearn.model_selection import RandomizedSearchCV
 from sklearn.cluster import KMeans
 
 
-def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=True, opt_decision_model=True):
+def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=True, opt_decision_model=True, log=False):
     np.random.seed(seed)
     us = unc_method.split('_')
     unc_method = us[0]
@@ -21,13 +21,13 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
     if opt_decision_model or unc_method =="set24" or unc_method =="set25" or "set30" in unc_method or "set31" in unc_method or unc_method =="set32": # or 27 or 28 or 24mix but they are not good and I dont plan on using them
         pram_grid = {
             "max_depth" :        np.arange(1,100),
-            # "min_samples_split": np.arange(2,10),
-            # "criterion" :        ["gini", "entropy"],
-            # "max_features" :     ["auto", "sqrt", "log2"],
-            # "n_estimators":      [pram["n_estimators"]]
+            "min_samples_split": np.arange(2,10),
+            "criterion" :        ["gini", "entropy"],
+            "max_features" :     ["auto", "sqrt", "log2"],
+            "n_estimators":      [pram["n_estimators"]]
         }
 
-        opt = RandomizedSearchCV(estimator=RandomForestClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], random_state=seed)
+        opt = RandomizedSearchCV(estimator=RandomForestClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], cv=10, random_state=seed)
         opt_result = opt.fit(x_train, y_train)      
 
         params_searched = np.array(opt_result.cv_results_["params"])
@@ -42,9 +42,20 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         params_score_mean = params_score_mean[sorted_index]
         params_score_std = params_score_std[sorted_index]
 
-    model = None
+        if log:
+            print("------------------------------------params_searched")
+            print(params_searched)
+            print("------------------------------------params_rank")
+            print(params_rank)
+            print("------------------------------------params_score_mean")
+            print(params_score_mean)
+            print("------------------------------------params_score_std")
+            print(params_score_std)
+
+
+    main_model = None
     if opt_decision_model == False:
-        model = RandomForestClassifier(bootstrap=True,
+        main_model = RandomForestClassifier(bootstrap=True,
             # criterion=pram['criterion'],
             max_depth=pram["max_depth"],
             # max_features= pram["max_features"],
@@ -53,83 +64,83 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
             verbose=0,
             warm_start=False)
     else:
-        model = RandomForestClassifier(**params_searched[0],random_state=seed)
+        main_model = RandomForestClassifier(**params_searched[0],random_state=seed)
 
-    model.fit(x_train, y_train)
+    main_model.fit(x_train, y_train)
     if predict:
-        prediction = model.predict(x_test)
+        prediction = main_model.predict(x_test)
     else:
         prediction = 0
 
 
     if "ent" == unc_method:
-        porb_matrix = get_prob_matrix(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
+        porb_matrix = get_prob_matrix(main_model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
         porb_matrix = np.array(porb_matrix)
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_ent(np.array(porb_matrix))
     elif "ent.levi" == unc_method:
-        porb_matrix = get_prob_matrix(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
+        porb_matrix = get_prob_matrix(main_model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
         porb_matrix = np.array(porb_matrix)
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_ent_levi(np.array(porb_matrix))
     elif "rl" == unc_method:
         # print("normal rl")
-        count_matrix = get_count_matrix(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
+        count_matrix = get_count_matrix(main_model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_rl_avg(count_matrix)
     elif "rl.avgsup" == unc_method:
         # print("rl.avgsup")
-        count_matrix = get_sub_count_matrix(model, x_test, pram["n_estimators"], pram["laplace_smoothing"]) # the counting shold be on subset on training data
+        count_matrix = get_sub_count_matrix(main_model, x_test, pram["n_estimators"], pram["laplace_smoothing"]) # the counting shold be on subset on training data
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.unc_avg_sup_rl(count_matrix)
     elif "rl.score" == unc_method:
-        count_matrix = get_sub_count_matrix(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
+        count_matrix = get_sub_count_matrix(main_model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.unc_rl_score(count_matrix)
     elif "rl.pro" == unc_method:
-        x = unc.EpiAle_Averaged_Uncertainty_Preferences(model, x_train, y_train, x_test, unc_mode, pram["n_estimators"])
+        x = unc.EpiAle_Averaged_Uncertainty_Preferences(main_model, x_train, y_train, x_test, unc_mode, pram["n_estimators"])
         x = np.array(x)
         total_uncertainty     = x
         epistemic_uncertainty = x 
         aleatoric_uncertainty = x
     elif "rl.alb" == unc_method:
-        count_matrix = get_count_matrix(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
+        count_matrix = get_count_matrix(main_model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_rl_ALB(count_matrix)
     elif "rl.int" == unc_method:
-        count_matrix = get_int_count_matrix(model, x_train, x_test, y_train, pram["n_estimators"], pram["laplace_smoothing"])
+        count_matrix = get_int_count_matrix(main_model, x_train, x_test, y_train, pram["n_estimators"], pram["laplace_smoothing"])
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_rl_one(count_matrix)
     elif "rl.uni" == unc_method:
-        count_matrix = get_uni_count_matrix(model, x_train, x_test, y_train, pram["n_estimators"], pram["laplace_smoothing"])
+        count_matrix = get_uni_count_matrix(main_model, x_train, x_test, y_train, pram["n_estimators"], pram["laplace_smoothing"])
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_rl_one(count_matrix)
     elif "credal" == unc_method: # this is credal from the tree
-        count_matrix = get_count_matrix(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
+        count_matrix = get_count_matrix(main_model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_credal_tree_DF(count_matrix)
     elif "set14" == unc_method:
-        porb_matrix = get_prob_matrix(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
+        porb_matrix = get_prob_matrix(main_model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
         porb_matrix = np.array(porb_matrix)
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set14(np.array(porb_matrix), pram["credal_size"])
     elif "set15" == unc_method:
-        porb_matrix = get_prob_matrix(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
+        porb_matrix = get_prob_matrix(main_model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set15(np.array(porb_matrix), pram["credal_size"])
     elif "setmix" == unc_method:
-        porb_matrix = get_prob_matrix(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
+        porb_matrix = get_prob_matrix(main_model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_setmix(np.array(porb_matrix))
     elif "set14.convex" == unc_method:
-        porb_matrix = get_prob_matrix(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
+        porb_matrix = get_prob_matrix(main_model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
         porb_matrix = np.array(porb_matrix)
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set14_convex(porb_matrix, pram["credal_size"])
     elif "set15.convex" == unc_method:
-        porb_matrix = get_prob_matrix(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
+        porb_matrix = get_prob_matrix(main_model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
         porb_matrix = np.array(porb_matrix)
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set15_convex(porb_matrix, pram["credal_size"])
     elif "set18" == unc_method:
-        likelyhoods = get_likelyhood(model, x_train, y_train, pram["n_estimators"], pram["laplace_smoothing"])
+        likelyhoods = get_likelyhood(main_model, x_train, y_train, pram["n_estimators"], pram["laplace_smoothing"])
         # replace likelyhoods with uniform - just for test
         # x0 = np.ones((likelyhoods.shape[0]))
         # x0_sum = np.sum(x0)
         # x0 = x0 / x0_sum
         # likelyhoods = x0
         # print(likelyhoods)
-        porb_matrix = get_prob(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
+        porb_matrix = get_prob(main_model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set18(porb_matrix, likelyhoods, pram["epsilon"])
     elif "set19" == unc_method:
-        likelyhoods = get_likelyhood(model, x_train, y_train, pram["n_estimators"], pram["laplace_smoothing"])
-        porb_matrix = get_prob(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
+        likelyhoods = get_likelyhood(main_model, x_train, y_train, pram["n_estimators"], pram["laplace_smoothing"])
+        porb_matrix = get_prob(main_model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set19(porb_matrix, likelyhoods, pram["epsilon"])
 
     elif "set20" == unc_method: # set20 [Random grid search] is about credal set with different hyper prameters. We get porb_matrix from different forests but use the same set18 method to have convexcity
@@ -231,8 +242,8 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
     
     elif "set23" == unc_method: # set23 Levi 18 prune trees of forest with clustering based on likelihood  #One super big forest from multiple forests
 
-        likelyhoods = get_likelyhood(model, x_train, y_train, pram["n_estimators"], pram["laplace_smoothing"])
-        porb_matrix = get_prob(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
+        likelyhoods = get_likelyhood(main_model, x_train, y_train, pram["n_estimators"], pram["laplace_smoothing"])
+        porb_matrix = get_prob(main_model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
         # print(">>>> before \n", porb_matrix)
         # print(">>>> before ", likelyhoods)
 
@@ -532,8 +543,10 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         
         params_searched = params_searched[: index]
         params_rank = params_rank[: index]
+        print(f"conf_int cut index {index}")
 
         for param in params_searched: # opt_pram_list: 
+            # print(param) 
             model = None
             model = RandomForestClassifier(**param,random_state=seed)
             model.fit(x_train, y_train)
@@ -543,6 +556,8 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         porb_matrix = np.array(credal_prob_matrix)
         porb_matrix = porb_matrix.transpose([1,0,2]) # convert to the format that uncertainty_set14 uses ## laplace smoothing has no effect on set20
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set14(porb_matrix)
+        # print(porb_matrix)
+        # print(epistemic_uncertainty)
 
     elif "set31" == unc_method: # Ent version of set30
         credal_prob_matrix = []
@@ -554,7 +569,6 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
             index -= 1
         if index == 0:
             index = 1
-            
         params_searched = params_searched[: index]
         params_rank = params_rank[: index]
 
@@ -569,6 +583,16 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         porb_matrix = porb_matrix.transpose([1,0,2]) # convert to the format that uncertainty_set14 uses ## laplace smoothing has no effect on set20
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set15(porb_matrix)
     elif "set30.convex" == unc_method: # GH convex credal set from hyper forests
+        # Confidance interval
+        conf_int = params_score_mean[0] -  1 * params_score_std[0] # include SD which is 99%
+        index = len(params_score_mean) - 1
+        while params_score_mean[index] < conf_int:
+            index -= 1
+        if index == 0:
+            index = 1
+        params_searched = params_searched[: index]
+        params_rank = params_rank[: index]
+
         credal_prob_matrix = []
         likelyhoods = []
 
@@ -586,6 +610,16 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set30(porb_matrix, likelyhoods)
 
     elif "set31.convex" == unc_method: # Ent version of set30
+        # Confidance interval
+        conf_int = params_score_mean[0] -  1 * params_score_std[0] # include SD which is 99%
+        index = len(params_score_mean) - 1
+        while params_score_mean[index] < conf_int:
+            index -= 1
+        if index == 0:
+            index = 1
+        params_searched = params_searched[: index]
+        params_rank = params_rank[: index]
+
         credal_prob_matrix = []
         likelyhoods = []
 
@@ -603,6 +637,15 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set31(porb_matrix, likelyhoods)
 
     elif "set32" == unc_method: # GH convex credal set from trees of hyper forests
+        # Confidance interval
+        conf_int = params_score_mean[0] -  1 * params_score_std[0] # include SD which is 99%
+        index = len(params_score_mean) - 1
+        while params_score_mean[index] < conf_int:
+            index -= 1
+        if index == 0:
+            index = 1
+        params_searched = params_searched[: index]
+        params_rank = params_rank[: index]
 
         credal_prob_matrix = []
         likelyhoods = []
@@ -621,6 +664,15 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         porb_matrix = np.array(credal_prob_matrix)
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set14(porb_matrix)
     elif "set32.convex" == unc_method: # GH convex credal set from trees of hyper forests
+        # Confidance interval
+        conf_int = params_score_mean[0] -  1 * params_score_std[0] # include SD which is 99%
+        index = len(params_score_mean) - 1
+        while params_score_mean[index] < conf_int:
+            index -= 1
+        if index == 0:
+            index = 1
+        params_searched = params_searched[: index]
+        params_rank = params_rank[: index]
 
         credal_prob_matrix = []
         likelyhoods = []
@@ -695,27 +747,28 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         total_uncertainty = epistemic_uncertainty + aleatoric_uncertainty
 
     elif "out.tree" == unc_method:
-        porb_matrix = get_prob(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
+        porb_matrix = get_prob(main_model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_outcome_tree(porb_matrix)
     elif "out" == unc_method:
-        likelyhoods = get_likelyhood(model, x_train, y_train, pram["n_estimators"], pram["laplace_smoothing"])
-        porb_matrix = get_prob(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
+        likelyhoods = get_likelyhood(main_model, x_train, y_train, pram["n_estimators"], pram["laplace_smoothing"])
+        porb_matrix = get_prob(main_model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_outcome(porb_matrix, likelyhoods, pram["epsilon"])
     elif "bays" == unc_method:
-        model = None
-        model = RandomForestClassifier(bootstrap=True,
-            criterion=pram['criterion'],
-            max_depth=pram["max_depth"],
-            n_estimators=pram["n_estimators"],
-            max_features= pram["max_features"],
-            random_state=42, # seed
-            verbose=0,
-            warm_start=False)
-        model.fit(x_train, y_train)
-        likelyhoods = get_likelyhood(model, x_train, y_train, pram["n_estimators"], pram["laplace_smoothing"])
+        # model = None
+        # model = RandomForestClassifier(bootstrap=True,
+        #     criterion=pram['criterion'],
+        #     max_depth=pram["max_depth"],
+        #     n_estimators=pram["n_estimators"],
+        #     max_features= pram["max_features"],
+        #     random_state=42, # seed
+        #     verbose=0,
+        #     warm_start=False)
+        # model.fit(x_train, y_train)
+
+        likelyhoods = get_likelyhood2(main_model, x_train, y_train, pram["laplace_smoothing"])
         # print("bays likelyhoods >>>>>>", likelyhoods)
-        # accs = get_acc(model, x_train, y_train, pram["n_estimators"])
-        porb_matrix = get_prob(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
+        # accs = get_acc(main_model, x_train, y_train, pram["n_estimators"])
+        porb_matrix = get_prob2(main_model, x_test, pram["laplace_smoothing"])
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_ent_bays(porb_matrix, likelyhoods)
     elif "bays2" == unc_method:
         model = None
@@ -734,7 +787,7 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         porb_matrix = get_prob(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_ent_bays2(porb_matrix, likelyhoods)
     elif "levi3" in unc_method:
-        porb_matrix = get_prob_matrix(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
+        porb_matrix = get_prob_matrix(main_model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
         porb_matrix = np.array(porb_matrix)
         if "levi3.GH" == unc_method:
             total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set14(porb_matrix, sampling_size=pram["credal_sample_size"], credal_size=pram["credal_size"])
@@ -751,8 +804,8 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         for a in np.linspace(1,pram["credal_L"],pram["credal_size"]): #range(1, pram["credal_L"] + 1):
             for b in np.linspace(1,pram["credal_L"],pram["credal_size"]): #range(1, pram["credal_L"] + 1):
                 # print(f"a {a} b {b}")
-                porb_matrix = get_prob(model, x_test, pram["n_estimators"], pram["laplace_smoothing"],a,b)
-                likelyhoods = get_likelyhood(model, x_train, y_train, pram["n_estimators"], pram["laplace_smoothing"],a,b)
+                porb_matrix = get_prob(main_model, x_test, pram["n_estimators"], pram["laplace_smoothing"],a,b)
+                likelyhoods = get_likelyhood(main_model, x_train, y_train, pram["n_estimators"], pram["laplace_smoothing"],a,b)
 
                 # print("likelyhoods  ", likelyhoods)
                 # print("before porb_matrix\n ", porb_matrix)
@@ -814,7 +867,7 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
             total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set15_convex(porb_matrix)
 
     elif "gs" == unc_method:
-        porb_matrix, likelyhoods = ens_boot_likelihood(model, x_train, y_train, x_test, pram["n_estimators"], pram["credal_size"],pram["laplace_smoothing"])
+        porb_matrix, likelyhoods = ens_boot_likelihood(main_model, x_train, y_train, x_test, pram["n_estimators"], pram["credal_size"],pram["laplace_smoothing"])
         porb_matrix = np.array(porb_matrix)
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_gs(porb_matrix, likelyhoods, pram["credal_size"])
     elif "random" == unc_method:
@@ -824,7 +877,7 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
     else:
         print(f"[Error] No implementation of unc_method {unc_method} for DF")
 
-    return prediction, total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty, model
+    return prediction, total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty, main_model
 
 def get_likelyhood(model_ens, x_train, y_train, n_estimators, laplace_smoothing, a=0, b=0, log=False):
     likelyhoods  = []
@@ -841,6 +894,24 @@ def get_likelyhood(model_ens, x_train, y_train, n_estimators, laplace_smoothing,
 
     if log:
         print(f"<log>----------------------------------------[{etree}]")
+        print(f"likelyhoods = {likelyhoods}")
+    return np.array(likelyhoods)
+
+def get_likelyhood2(model_ens, x_train, y_train, laplace_smoothing, a=0, b=0, log=False):
+    likelyhoods  = []
+    for estimator in model_ens.estimators_:
+        if laplace_smoothing == 0 and a==0 and b==0:
+            tree_prob_train = estimator.predict_proba(x_train) 
+        else:
+            tree_prob_train = tree_laplace_corr(estimator,x_train, laplace_smoothing, a, b)
+
+        likelyhoods.append(log_loss(y_train,tree_prob_train))
+    likelyhoods = np.array(likelyhoods)
+    likelyhoods = np.exp(-likelyhoods) # convert log likelihood to likelihood
+    likelyhoods = likelyhoods / np.sum(likelyhoods) # normalization of the likelihood
+
+    if log:
+        print(f"<log>----------------------------------------[]")
         print(f"likelyhoods = {likelyhoods}")
     return np.array(likelyhoods)
 
@@ -868,6 +939,20 @@ def get_prob(model_ens, x_data, n_estimators, laplace_smoothing, a=0, b=0, log=F
         prob_matrix.append(tree_prob)
     if log:
         print(f"<log>----------------------------------------[{etree}]")
+        print(f"prob_matrix = {prob_matrix}")
+    prob_matrix = np.array(prob_matrix)
+    prob_matrix = prob_matrix.transpose([1,0,2]) # D1 = data index D2= ens tree index D3= prediction prob for classes
+    return prob_matrix
+def get_prob2(model_ens, x_data, laplace_smoothing, a=0, b=0, log=False):
+    prob_matrix  = []
+    for estimator in model_ens.estimators_:
+        if laplace_smoothing == 0 and a==0 and b==0:
+            tree_prob = estimator.predict_proba(x_data) 
+        else:
+            tree_prob = tree_laplace_corr(estimator,x_data, laplace_smoothing,a,b)
+        prob_matrix.append(tree_prob)
+    if log:
+        print(f"<log>----------------------------------------[]")
         print(f"prob_matrix = {prob_matrix}")
     prob_matrix = np.array(prob_matrix)
     prob_matrix = prob_matrix.transpose([1,0,2]) # D1 = data index D2= ens tree index D3= prediction prob for classes
