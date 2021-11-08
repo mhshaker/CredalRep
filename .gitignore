@@ -4,3 +4,5 @@ Database/DB_files/
 project_unc/
 Data/Jdata/fashionMnist.csv
 Data/Jdata/DBpedia.csv
+Data/Jdata/dbpedia_train.svm
+Data/Jdata/dbpedia_test.svm
