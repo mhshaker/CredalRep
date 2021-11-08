@@ -113,7 +113,7 @@ if __name__ == '__main__':
     job_id = 0 # for developement
     seed   = 1
     runs = 1
-    data_name = "Jdata/parkinsons"
+    data_name = "Jdata/DBpedia"
     algo = "DF"
     unc_method = "set30.convex"
     prams = {
@@ -177,6 +177,9 @@ if __name__ == '__main__':
 
     else:
         features, target = dp.load_data(data_name)
+        # print(features.shape)
+        # print(target.shape)
+        # exit()
 
         print(f"job_id {job_id} start")
         start = prams["run_start"]

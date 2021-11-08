@@ -18,26 +18,27 @@ vertical_plot  = False
 single_plot    = False
 
 color_correct  = True
-job_id         = True
-in_plot_legend = True
-legend_flag    = False
+job_id         = False
+sort_legend    = True
+in_plot_legend = False
+legend_flag    = True
 
 kendalltau     = True 
 
-# data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "QSAR", "spambase"]  #, "blod", "bank"
+# data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "QSAR", "spambase", "blod", "bank"]  #
 # data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod"] 
 # data_list = ["climate", "parkinsons", "spambase"]
-data_list = ["parkinsons"]
+data_list = ["wine_qw"]
 modes     = "eat"
 
 for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name    = "set30_convexGHbounds"
+    run_name    = "Forest_hyper_all_test"
     plot_name   = f"{data}_{run_name}"
-    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND run_name='{run_name}'"
-    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=6053 OR id=6055" 
+    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND run_name='{run_name}'"
+    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=6100 OR id=6101" 
 
     ########################################################################################################################################################
 
@@ -217,8 +218,13 @@ for data in data_list:
                     color = "red"
                 if "set30" in legend:
                     color = "blue"
+                    alpha = 0.7
                 if "set31" in legend:
                     color = "red"
+                    alpha = 0.7
+                if "set32" in legend:
+                    color = "purple"
+                    alpha = 0.7
                 if "out" in legend:
                     color = "black"
             else:
@@ -239,6 +245,9 @@ for data in data_list:
             legend = legend.replace("set21", "L-C2-Ent")
             legend = legend.replace("set24", "L-C3-GH")  # it is C3 but just for the WUML21 presentation
             legend = legend.replace("set25", "L-C3-Ent")
+            legend = legend.replace("set30", "L-GH")  # it is C3 but just for the WUML21 presentation
+            legend = legend.replace("set31", "L-Ent")
+            legend = legend.replace("set32", "L-GH-tree")
             legend = legend.replace("gs", "GS")
 
 
@@ -276,10 +285,14 @@ for data in data_list:
                     uni_y_range[0] = y_range[0]
                 if y_range[1] > uni_y_range[1]:
                     uni_y_range[1] = y_range[1]
+                    # if y_range[1] > 100:
+                    #     uni_y_range[1] = 100.1
+
 
                 if in_plot_legend:
                     handles, labels = axs[mode_index].get_legend_handles_labels()
-                    labels, handles = zip(*sorted(zip(labels, handles), key=lambda t: t[0]))
+                    if sort_legend:
+                        labels, handles = zip(*sorted(zip(labels, handles), key=lambda t: t[0]))
                     axs[mode_index].legend(handles, labels)
 
     
@@ -305,6 +318,8 @@ for data in data_list:
                 else:
                     ax.set(xlabel=xlabel)
                     pass
+    else:
+        axs.axis(ymin=95,ymax=100.1)
     # title = plot_list
     # fig.suptitle(data)
     # with warnings.catch_warnings():

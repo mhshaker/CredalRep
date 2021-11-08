@@ -3,3 +3,4 @@ Database/DB_files/
 *.pyc
 project_unc/
 Data/Jdata/fashionMnist.csv
+Data/Jdata/DBpedia.csv

@@ -30,8 +30,8 @@ for data in data_list:
     run_name  = "set31_31" # "ens_size_UAI"
     # query1       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}' AND result_type='bays'"
     # query2       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}' AND result_type='set18'"
-    query1       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=6046" 
-    query2       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=6047" 
+    query1       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=6101" 
+    query2       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=6102" 
 
 
     ########################################################################################################################################################
