@@ -1,7 +1,9 @@
+
+from sklearn import datasets
 import numpy as np
 
 
-a = [1,2,3]
+f, t = datasets.load_svmlight_file("Data/Jdata/dbpedia_train.svm")
 
-if 5 in a:
-    print("yess")
+print(f.shape)
+print(t.shape)

@@ -24,7 +24,8 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
             "min_samples_split": np.arange(2,10),
             "criterion" :        ["gini", "entropy"],
             "max_features" :     ["auto", "sqrt", "log2"],
-            "n_estimators":      [pram["n_estimators"]]
+            # "n_estimators":      np.arange(1,100)
+            # "n_estimators":      [pram["n_estimators"]]
         }
 
         opt = RandomizedSearchCV(estimator=RandomForestClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], cv=10, random_state=seed)
@@ -543,10 +544,10 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         
         params_searched = params_searched[: index]
         params_rank = params_rank[: index]
-        print(f"conf_int cut index {index}")
+        # print(f"conf_int cut index {index}")
 
-        for param in params_searched: # opt_pram_list: 
-            # print(param) 
+        for i, param in enumerate(params_searched): # opt_pram_list: 
+            # print(f"Acc:{params_score_mean[i]:.4f} +-{params_score_std[i]:.4f} {param}")  # Eyke log
             model = None
             model = RandomForestClassifier(**param,random_state=seed)
             model.fit(x_train, y_train)
@@ -556,8 +557,10 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         porb_matrix = np.array(credal_prob_matrix)
         porb_matrix = porb_matrix.transpose([1,0,2]) # convert to the format that uncertainty_set14 uses ## laplace smoothing has no effect on set20
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set14(porb_matrix)
-        # print(porb_matrix)
-        # print(epistemic_uncertainty)
+        # print("------------------------------------GH") # Eyke log
+        # print(epistemic_uncertainty[0:5])
+        # print("------------------------------------probs")
+        # print(porb_matrix[0:5])
 
     elif "set31" == unc_method: # Ent version of set30
         credal_prob_matrix = []

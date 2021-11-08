@@ -15,8 +15,9 @@ if not os.path.exists(pic_dir):
 unc_value_plot = False
 local          = False
 vertical_plot  = False
-single_plot    = False
 
+
+single_plot    = False
 color_correct  = True
 job_id         = False
 sort_legend    = True
@@ -28,17 +29,17 @@ kendalltau     = True
 # data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "QSAR", "spambase", "blod", "bank"]  #
 # data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod"] 
 # data_list = ["climate", "parkinsons", "spambase"]
-data_list = ["wine_qw"]
+data_list = ["parkinsons"]
 modes     = "eat"
 
 for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name    = "Forest_hyper_all_test"
+    run_name    = "noTreeOptCV10"
     plot_name   = f"{data}_{run_name}"
     query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND run_name='{run_name}'"
-    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=6100 OR id=6101" 
+    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=6163" 
 
     ########################################################################################################################################################
 
@@ -319,7 +320,8 @@ for data in data_list:
                     ax.set(xlabel=xlabel)
                     pass
     else:
-        axs.axis(ymin=95,ymax=100.1)
+        # axs.axis(ymin=95,ymax=100.1)
+        pass
     # title = plot_list
     # fig.suptitle(data)
     # with warnings.catch_warnings():

@@ -1,15 +1,19 @@
 
+from scipy.sparse import data
 from sklearn.model_selection import train_test_split
 from sklearn import preprocessing
 from sklearn.utils import resample
 import numpy as np
 import pandas as pd
-
+from sklearn import datasets
 import arff 
 from sklearn.utils import resample
 from sklearn import preprocessing
 
 def load_data(data_name):   
+
+	if data_name == "dbpedia":
+		features, target = datasets.load_svmlight_file("Data/Jdata/dbpedia_train.svm")
 
 	if "arff_" in data_name:
 		data_name = data_name.strip('arff_')

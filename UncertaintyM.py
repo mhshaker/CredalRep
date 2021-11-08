@@ -861,7 +861,9 @@ def minent31(probs, likelyhoods):
 ############################################################################
 
 def uncertainty_set30(probs, likelyhoods, log=False): # credal set with different hyper prameters
+	# print(probs)
 	gh = set_gh30(probs, likelyhoods)
+	# print(gh)
 	# gh = set_gh(probs) # non convex
 	s_max = maxent30(probs, likelyhoods)
 
