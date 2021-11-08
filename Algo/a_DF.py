@@ -520,8 +520,18 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         porb_matrix = np.array(credal_prob_matrix)
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set15(porb_matrix)
         
-    elif "set30" == unc_method: # GH convex credal set from hyper forests
+    elif "set30" == unc_method: # GH credal set from hyper forests
         credal_prob_matrix = []
+        # Confidance interval
+        conf_int = params_score_mean[0] -  1 * params_score_std[0] # include SD which is 99%
+        index = len(params_score_mean) - 1
+        while params_score_mean[index] < conf_int:
+            index -= 1
+        if index == 0:
+            index = 1
+        
+        params_searched = params_searched[: index]
+        params_rank = params_rank[: index]
 
         for param in params_searched: # opt_pram_list: 
             model = None
@@ -537,6 +547,16 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
     elif "set31" == unc_method: # Ent version of set30
         credal_prob_matrix = []
         likelyhoods = []
+        # Confidance interval
+        conf_int = params_score_mean[0] -  1 * params_score_std[0] # include SD which is 99%
+        index = len(params_score_mean) - 1
+        while params_score_mean[index] < conf_int:
+            index -= 1
+        if index == 0:
+            index = 1
+            
+        params_searched = params_searched[: index]
+        params_rank = params_rank[: index]
 
         for param in params_searched: # opt_pram_list: 
             model = None
@@ -583,6 +603,24 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set31(porb_matrix, likelyhoods)
 
     elif "set32" == unc_method: # GH convex credal set from trees of hyper forests
+
+        credal_prob_matrix = []
+        likelyhoods = []
+
+        for param in params_searched: # opt_pram_list: 
+            model = None
+            model = RandomForestClassifier(**param,random_state=seed)
+            model.fit(x_train, y_train)
+            
+            likelyhoods.append(get_likelyhood(model, x_train, y_train, pram["n_estimators"], pram["laplace_smoothing"]))
+            if credal_prob_matrix == []:
+                credal_prob_matrix = get_prob(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
+            else:
+                credal_prob_matrix = np.concatenate((credal_prob_matrix, get_prob(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])), axis=1)
+
+        porb_matrix = np.array(credal_prob_matrix)
+        total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set14(porb_matrix)
+    elif "set32.convex" == unc_method: # GH convex credal set from trees of hyper forests
 
         credal_prob_matrix = []
         likelyhoods = []
