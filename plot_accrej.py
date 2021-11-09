@@ -19,24 +19,24 @@ vertical_plot  = False
 
 single_plot    = False
 color_correct  = True
-job_id         = False
+job_id         = True
 sort_legend    = True
 in_plot_legend = False
 legend_flag    = True
 
 kendalltau     = True 
 
-# data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "QSAR", "spambase", "blod", "bank"]  #
+data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "QSAR", "spambase", "blod", "bank", "wine_qw"]  #
 # data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod"] 
 # data_list = ["climate", "parkinsons", "spambase"]
-data_list = ["parkinsons"]
+# data_list = ["parkinsons"]
 modes     = "eat"
 
 for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name    = "noTreeOptCV10"
+    run_name    = "Opt50_MorParamFixTree"
     plot_name   = f"{data}_{run_name}"
     query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND run_name='{run_name}'"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=6163" 

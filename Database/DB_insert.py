@@ -3,12 +3,12 @@ import os
 
 auto_run = False
 
-# data_names     = ["Jdata/parkinsons", "Jdata/vertebral","Jdata/ionosphere", "Jdata/climate", "Jdata/breast", "Jdata/QSAR", "Jdata/spambase", "Jdata/blod" ,"Jdata/bank"] # 
-data_names     = ["Jdata/parkinsons"] 
+data_names     = ["Jdata/parkinsons", "Jdata/vertebral","Jdata/ionosphere", "Jdata/climate", "Jdata/breast", "Jdata/QSAR", "Jdata/spambase", "Jdata/blod" ,"Jdata/bank", "Jdata/wine_qw"] # , "Jdata/dbpedia"
+# data_names     = ["Jdata/parkinsons"] 
 algos          = ["DF"] # ,"LR"
 # modes          = ["bays", "set18", "set19", "set24", "set25", "out"]
 modes          = ["bays", "set30", "set31"] # , "set14.convex"
-# modes          = ["set30"] # , "set14.convex"
+# modes          = ["bays"] # , "set14.convex"
 task           = "unc"
 runs           = 20
 prams = {
@@ -31,7 +31,7 @@ prams = {
 for algo in algos:
     for data_name in data_names:
         for mode in modes:
-            run_name       = "OptCV10" #f"{mode}_{algo}" + "noctua_test" # if you want a specific name give it here
+            run_name       = "Opt50_MorParamFixTree" #f"{mode}_{algo}" + "noctua_test" # if you want a specific name give it here
             description    = "acc_hist"
 
             mydb = db.connect(host="131.234.250.119", user="noctua", passwd="uncertainty", database="uncertainty")

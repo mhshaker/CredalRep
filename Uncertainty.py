@@ -113,16 +113,16 @@ if __name__ == '__main__':
     job_id = 0 # for developement
     seed   = 1
     runs = 1
-    data_name = "Jdata/parkinsons"
+    data_name = "Jdata/dbpedia"
     algo = "DF"
-    unc_method = "set30"
+    unc_method = "bays"
     prams = {
     # 'criterion'          : "entropy",
     # 'max_features'       : "auto",
     # 'max_depth'          : 10,
-    'n_estimators'       : 10,
-    'n_estimator_predict': 10,
-    'opt_iterations'     : 20,
+    'n_estimators'       : 3,
+    'n_estimator_predict': 3,
+    'opt_iterations'     : 2,
     'epsilon'            : 1.001,
     'credal_size'        : 999,
     'laplace_smoothing'  : 1,

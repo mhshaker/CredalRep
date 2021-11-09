@@ -12,10 +12,10 @@ from sklearn import preprocessing
 
 def load_data(data_name):   
 
-	if data_name == "dbpedia":
+	if data_name == "Jdata/dbpedia":
 		features, target = datasets.load_svmlight_file("Data/Jdata/dbpedia_train.svm")
 
-	if "arff_" in data_name:
+	elif "arff_" in data_name:
 		data_name = data_name.strip('arff_')
 		features, target = load_arff_data(data_name,log=False)
 		features = np.array(features).astype('float32')
