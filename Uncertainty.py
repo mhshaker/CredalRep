@@ -113,7 +113,7 @@ if __name__ == '__main__':
     job_id = 0 # for developement
     seed   = 1
     runs = 1
-    data_name = "Jdata/dbpedia"
+    data_name = "Jdata/cifar10small"
     algo = "DF"
     unc_method = "bays"
     prams = {

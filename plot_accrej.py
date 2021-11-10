@@ -26,20 +26,20 @@ legend_flag    = True
 
 kendalltau     = True 
 
-data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "QSAR", "spambase", "blod", "bank", "wine_qw"]  #
+# data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "QSAR", "spambase", "blod", "bank", "wine_qw"]  #
 # data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod"] 
 # data_list = ["climate", "parkinsons", "spambase"]
-# data_list = ["parkinsons"]
+data_list = ["cifar10small"]
 modes     = "eat"
 
 for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name    = "Opt50_MorParamFixTree"
+    run_name    = "cifar10small"
     plot_name   = f"{data}_{run_name}"
     query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND run_name='{run_name}'"
-    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=6163" 
+    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=6269" 
 
     ########################################################################################################################################################
 
@@ -336,6 +336,6 @@ for data in data_list:
         # fig.legend(handles, labels, bbox_to_anchor=(0.9, 1), loc='upper left') # , loc="lower center" , ncol=7
         fig.legend(labels=legend_list, bbox_to_anchor=(0.9, 1), loc='upper left') # , loc="lower center" , ncol=7
 
-    fig.savefig(f"./pic/unc/{plot_name}.png",bbox_inches='tight')
+    fig.savefig(f"./pic/results/{plot_name}.png",bbox_inches='tight')
     # fig.close()
     print(f"Plot {plot_name} Done")

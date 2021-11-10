@@ -42,7 +42,7 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         params_rank = params_rank[sorted_index]
         params_score_mean = params_score_mean[sorted_index]
         params_score_std = params_score_std[sorted_index]
-        print(f"Acc:{params_score_mean[0]:.4f} +-{params_score_std[0]:.4f} {params_searched[0]}")
+        # print(f"Acc:{params_score_mean[0]:.4f} +-{params_score_std[0]:.4f} {params_searched[0]}")
 
         if log:
             print("------------------------------------params_searched")
