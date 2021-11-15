@@ -8,7 +8,7 @@ import UncertaintyM as unc
 import warnings
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
-pic_dir = f"{base_dir}/pic/unc"
+pic_dir = f"{base_dir}/pic/results"
 if not os.path.exists(pic_dir):
     os.makedirs(pic_dir)
 
@@ -18,7 +18,7 @@ vertical_plot  = False
 
 
 single_plot    = False
-color_correct  = True
+color_correct  = False
 job_id         = True
 sort_legend    = True
 in_plot_legend = False
@@ -29,17 +29,17 @@ kendalltau     = True
 # data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "QSAR", "spambase", "blod", "bank", "wine_qw"]  #
 # data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod"] 
 # data_list = ["climate", "parkinsons", "spambase"]
-data_list = ["cifar10small"]
+data_list = ["spambase"]
 modes     = "eat"
 
 for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name    = "cifar10small"
+    run_name    = "1sd"
     plot_name   = f"{data}_{run_name}"
-    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND run_name='{run_name}'"
-    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=6269" 
+    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND run_name='{run_name}'"
+    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=6465 OR id=6429" 
 
     ########################################################################################################################################################
 

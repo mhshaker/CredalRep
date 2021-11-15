@@ -63,7 +63,7 @@ def uncertainty_ent_bays(probs, likelihoods): # three dimentianl array with d1 a
 	e = total - a
 	return total, e, a
 
-def uncertainty_ent_bays2(probs, likelihoods): # three dimentianl array with d1 as datapoints, (d2) the rows as samples and (d3) the columns as probability for each class
+def uncertainty_ent_bays2(probs, likelihoods): # idea from Willem
 	p = np.array(probs)
 	entropy = -p*np.ma.log2(p)
 	entropy = entropy.filled(0)
@@ -78,6 +78,18 @@ def uncertainty_ent_bays2(probs, likelihoods): # three dimentianl array with d1 
 
 	total = e + a
 	return total, e, a
+
+def uncertainty_hyper_bays(probs, likelyhoods, log=False): # credal set with different hyper prameters
+	# print(probs)
+	gh = set_gh30(probs, likelyhoods)
+	# print(gh)
+	# gh = set_gh(probs) # non convex
+	s_max = maxent30(probs, likelyhoods)
+
+	total = s_max
+	e = gh
+	a = total - e
+	return total, e, a 
 
 
 def uncertainty_ent_levi(probs, credal_size=30): # three dimentianl array with d1 as datapoints, (d2) the rows as samples and (d3) the columns as probability for each class

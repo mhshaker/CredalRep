@@ -3,14 +3,7 @@ from sklearn import datasets
 import numpy as np
 
 
-
-def unpickle(file):
-    import pickle
-    with open(file, 'rb') as fo:
-        dict = pickle.load(fo, encoding='bytes')
-    return dict
-
-df = unpickle("./Data/Jdata/data_batch_1")
-x = df.get("data")
-print(x.shape)
-# print(df)
+features, target = datasets.load_svmlight_file("Data/Jdata/dbpedia_train.svm")
+print(features.shape)
+print(target.shape)
+print(np.unique(target))

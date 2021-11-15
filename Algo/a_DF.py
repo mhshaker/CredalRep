@@ -19,12 +19,24 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         unc_mode = us[1] # spliting the active selection mode (_a _e _t) from the unc method because DF dose not work with that
 
     if opt_decision_model or unc_method =="set24" or unc_method =="set25" or "set30" in unc_method or "set31" in unc_method or unc_method =="set32": # or 27 or 28 or 24mix but they are not good and I dont plan on using them
+        # find max depth range
+        depth_model = RandomForestClassifier(pram["n_estimator_predict"], random_state=seed)
+        depth_model.fit(x_train, y_train)
+        max_depth = 0
+        for estimator in depth_model.estimators_:
+            d = estimator.tree_.max_depth
+            if d > max_depth:
+                max_depth = d
+        if log:
+            print("------------------------------------max_depth test ")
+            print(max_depth)
+
         pram_grid = {
-            "max_depth" :        np.arange(1,100),
-            "min_samples_split": np.arange(2,10),
+            "max_depth" :        np.arange(1,max_depth),
+            # "min_samples_split": np.arange(0.01,0.1, 0.02),
+            # "min_samples_leaf":  np.arange(0.01,0.1, 0.02),
             "criterion" :        ["gini", "entropy"],
-            "max_features" :     ["auto", "sqrt", "log2"],
-            # "n_estimators":      np.arange(1,100)
+            "max_features" :     ["sqrt", "log2"],
             "n_estimators":      [pram["n_estimators"]]
         }
 
@@ -46,13 +58,15 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
 
         if log:
             print("------------------------------------params_searched")
-            print(params_searched)
-            print("------------------------------------params_rank")
-            print(params_rank)
-            print("------------------------------------params_score_mean")
-            print(params_score_mean)
-            print("------------------------------------params_score_std")
-            print(params_score_std)
+            for i, param in enumerate(params_searched):
+                print(f"Acc:{params_score_mean[i]:.4f} +-{params_score_std[i]:.4f} {param}")  # Eyke log
+            # print(params_searched)
+            # print("------------------------------------params_rank")
+            # print(params_rank)
+            # print("------------------------------------params_score_mean")
+            # print(params_score_mean)
+            # print("------------------------------------params_score_std")
+            # print(params_score_std)
 
 
     main_model = None
@@ -69,6 +83,14 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         main_model = RandomForestClassifier(**params_searched[0],random_state=seed)
 
     main_model.fit(x_train, y_train)
+
+    # if log:
+    #     print("------------------------------------ tree depth")
+    #     for estimator in main_model.estimators_:
+    #         d = estimator.tree_.max_depth
+    #         print(d)
+
+
     if predict:
         prediction = main_model.predict(x_test)
     else:
@@ -152,11 +174,11 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         pram_smaple_list = []
 
         # select top K based on kmeans of 2 clusters, we select the cluster with good results to put in the credal set
-        kmeans = KMeans(n_clusters=2, random_state=seed).fit(params_score.reshape(-1, 1))
+        kmeans = KMeans(n_clusters=2, random_state=seed).fit(params_score_mean.reshape(-1, 1))
         cluster_result = kmeans.labels_
         index = np.where(cluster_result == 1)[0][0]
         if index == 0:
-            index = len(params_score)
+            index = len(params_score_mean)
         params_searched = params_searched[: index]
         params_rank = params_rank[: index]
         
@@ -188,11 +210,11 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         pram_smaple_list = []
 
         # select top K based on kmeans of 2 clusters, we select the cluster with good results to put in the credal set
-        kmeans = KMeans(n_clusters=2, random_state=seed).fit(params_score.reshape(-1, 1))
+        kmeans = KMeans(n_clusters=2, random_state=seed).fit(params_score_mean.reshape(-1, 1))
         cluster_result = kmeans.labels_
         index = np.where(cluster_result == 1)[0][0]
         if index == 0:
-            index = len(params_score)
+            index = len(params_score_mean)
         params_searched = params_searched[: index]
         params_rank = params_rank[: index]
         
@@ -545,10 +567,13 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         
         params_searched = params_searched[: index]
         params_rank = params_rank[: index]
-        # print(f"conf_int cut index {index}")
+        if log:
+            print("------------------------------------")
+            print(f"conf_int cut index {index}")
 
-        for i, param in enumerate(params_searched): # opt_pram_list: 
-            # print(f"Acc:{params_score_mean[i]:.4f} +-{params_score_std[i]:.4f} {param}")  # Eyke log
+        for i, param in enumerate(params_searched): # opt_pram_list:
+            if log: 
+                print(f"Acc:{params_score_mean[i]:.4f} +-{params_score_std[i]:.4f} {param}")  # Eyke log
             model = None
             model = RandomForestClassifier(**param,random_state=seed)
             model.fit(x_train, y_train)
@@ -567,7 +592,7 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         credal_prob_matrix = []
         likelyhoods = []
         # Confidance interval
-        conf_int = params_score_mean[0] -  1 * params_score_std[0] # include SD which is 99%
+        conf_int = params_score_mean[0] -  2 * params_score_std[0] # include SD which is 99%
         index = len(params_score_mean) - 1
         while params_score_mean[index] < conf_int:
             index -= 1
