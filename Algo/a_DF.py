@@ -874,10 +874,6 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
             print("------------------------------------")
             print(f"conf_int cut index {index}")
 
-        total_list = []
-        epistemic_list = []
-        aliatoric_list = []
-
         for i, param in enumerate(params_searched): # opt_pram_list:
             if log: 
                 print(f"Acc:{params_score_mean[i]:.4f} +-{params_score_std[i]:.4f} {param}")  # Eyke log
@@ -904,9 +900,7 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         epistemic_uncertainty = epistemic_hyperforest
         aleatoric_uncertainty = aleatoric_hyperforest
     elif "hyperbays" == unc_method: # GH credal set from hyper forests
-        credal_prob_matrix = []
         credal_prob_matrix_all = []
-        likelyhoods_hyper = []
         likelyhoods_all = []
         # Confidance interval
         conf_int = params_score_mean[0] -  1 * params_score_std[0] # include SD which is 99%
@@ -922,10 +916,6 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
             print("------------------------------------")
             print(f"conf_int cut index {index}")
 
-        total_list = []
-        epistemic_list = []
-        aliatoric_list = []
-
         for i, param in enumerate(params_searched): # opt_pram_list:
             if log: 
                 print(f"Acc:{params_score_mean[i]:.4f} +-{params_score_std[i]:.4f} {param}")  # Eyke log
@@ -933,44 +923,12 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
             model = RandomForestClassifier(**param,random_state=seed)
             model.fit(x_train, y_train)
 
-            likelyhoods = get_likelyhood2(model, x_train, y_train, pram["laplace_smoothing"])
-            porb_matrix = get_prob2(model, x_test, pram["laplace_smoothing"])
-
-            total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_ent_bays(porb_matrix, likelyhoods)
-
-            # forest_avg
-            total_list.append(total_uncertainty)
-            epistemic_list.append(epistemic_uncertainty)
-            aliatoric_list.append(aleatoric_uncertainty)
-
-            # hyper forest
-            test_prob = model.predict_proba(x_test)
-            credal_prob_matrix.append(test_prob)
-            train_prob = model.predict_proba(x_train)
-            likelyhoods_hyper.append(log_loss(y_train,train_prob))
-
             # all
             likelyhoods_all.append(get_likelyhood2(model, x_train, y_train, pram["laplace_smoothing"]))
             if credal_prob_matrix_all == []:
                 credal_prob_matrix_all = get_prob(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
             else:
                 credal_prob_matrix_all = np.concatenate((credal_prob_matrix_all, get_prob2(model, x_test, pram["laplace_smoothing"])), axis=1)
-        
-        # forest_avg
-        total_forest_avg = np.array(total_list).mean(axis=0)
-        epistemic_forest_avg = np.array(epistemic_list).mean(axis=0)
-        aliatoric_forest_avg = np.array(aliatoric_list).mean(axis=0)
-
-        # hyper forest
-
-        likelyhoods_hyper = np.array(likelyhoods_hyper)
-        likelyhoods_hyper = np.exp(-likelyhoods_hyper) # convert log likelihood to likelihood
-        likelyhoods_hyper = likelyhoods_hyper / np.sum(likelyhoods_hyper) # normalization of the likelihood
-
-        porb_matrix = np.array(credal_prob_matrix)
-        porb_matrix = porb_matrix.transpose([1,0,2]) # convert to the format that uncertainty_set14 uses ## laplace smoothing has no effect on set20
-        total_hyperforest, epistemic_hyperforest, aleatoric_hyperforest = unc.uncertainty_ent_bays(porb_matrix, likelyhoods_hyper)
-
         # all 
         porb_matrix_all = np.array(credal_prob_matrix_all)
         likelyhoods_all = np.array(likelyhoods_all)
@@ -978,12 +936,9 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         likelyhoods_all = likelyhoods_all / np.sum(likelyhoods_all) # normalization of the likelihood
         total_all, epistemic_all, aleatoric_all = unc.uncertainty_ent_bays(porb_matrix_all, likelyhoods_all)
 
-        print("v", total_forest_avg)
-        print("h", total_hyperforest)
-        print("a", total_all)
-        total_uncertainty = total_hyperforest
-        epistemic_uncertainty = epistemic_hyperforest
-        aleatoric_uncertainty = aleatoric_hyperforest
+        total_uncertainty = total_all
+        epistemic_uncertainty = epistemic_all
+        aleatoric_uncertainty = aleatoric_all
 
     elif "levi3" in unc_method:
         porb_matrix = get_prob_matrix(main_model, x_test, pram["n_estimators"], pram["laplace_smoothing"])

@@ -115,18 +115,18 @@ if __name__ == '__main__':
     runs = 1
     data_name = "Jdata/parkinsons"
     algo = "DF"
-    unc_method = "set30"
+    unc_method = "hyperbays"
     prams = {
     # 'criterion'          : "entropy",
     # 'max_features'       : "auto",
     'max_depth'          : 100,
     'n_estimators'       : 10,
     'n_estimator_predict': 10,
-    'opt_iterations'     : 50,
+    'opt_iterations'     : 17,
     'epsilon'            : 1.001,
     'credal_size'        : 999,
     'laplace_smoothing'  : 1,
-    'split'              : 0.3,
+    'split'              : 0.025,
     'run_start'          : 0,
     'cv'                 : 0,
     'opt_decision_model' : True
