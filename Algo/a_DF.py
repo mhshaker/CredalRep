@@ -816,7 +816,7 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         porb_matrix = get_prob(model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_ent_bays2(porb_matrix, likelyhoods)
     
-    elif "hyperbays_avg" == unc_method: # GH credal set from hyper forests
+    elif "hyperbaysavg" == unc_method: # GH credal set from hyper forests
         # Confidance interval
         conf_int = params_score_mean[0] -  1 * params_score_std[0] # include SD which is 99%
         index = len(params_score_mean) - 1
@@ -857,7 +857,7 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         epistemic_uncertainty = np.array(epistemic_list).mean(axis=0)
         aleatoric_uncertainty = np.array(aliatoric_list).mean(axis=0)
 
-    elif "hyperbays_hyper" == unc_method: # GH credal set from hyper forests
+    elif "hyperbayshyper" == unc_method: # GH credal set from hyper forests
         credal_prob_matrix = []
         likelyhoods_hyper = []
         # Confidance interval
@@ -899,7 +899,7 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         total_uncertainty = total_hyperforest
         epistemic_uncertainty = epistemic_hyperforest
         aleatoric_uncertainty = aleatoric_hyperforest
-    elif "hyperbays" == unc_method: # GH credal set from hyper forests
+    elif "hyperbaysall" == unc_method: # GH credal set from hyper forests
         credal_prob_matrix_all = []
         likelyhoods_all = []
         # Confidance interval

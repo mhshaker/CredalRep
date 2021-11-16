@@ -3,12 +3,12 @@ import os
 
 auto_run = False
 
-data_names     = ["Jdata/parkinsons", "Jdata/vertebral","Jdata/ionosphere", "Jdata/climate", "Jdata/breast", "Jdata/QSAR", "Jdata/spambase", "Jdata/blod" ,"Jdata/bank", "Jdata/wine_qw"] # , "Jdata/dbpedia"
-# data_names     = ["Jdata/fashionMnist", "cifar10small"]  #  
-# data_names     = ["Jdata/dbpedia"]  #  fashionMnist 
+data_names     = ["Jdata/parkinsons", "Jdata/vertebral","Jdata/ionosphere", "Jdata/climate", "Jdata/breast", "Jdata/QSAR", "Jdata/spambase", "Jdata/blod" ,"Jdata/bank", "Jdata/wine_qw", "Jdata/fashionMnist", "Jdata/cifar10small"] # , "Jdata/dbpedia"
+# data_names     = ["Jdata/fashionMnist", "Jdata/cifar10small"]  #  
+# data_names     = ["Jdata/parkinsons"]  #  fashionMnist 
 algos          = ["DF"] # ,"LR"
-# modes          = ["bays", "set30", "set31"] # , "set14.convex"
-modes          = ["set30"] # , "set14.convex"
+modes          = ["bays", "hyperbaysavg", "hyperbayshyper", "hyperbaysall"] # , "set14.convex"
+# modes          = ["set30"] # , "set14.convex"
 task           = "unc"
 runs           = 20
 prams = {
@@ -31,7 +31,7 @@ prams = {
 for algo in algos:
     for data_name in data_names:
         for mode in modes:
-            run_name       = "opt50_lessParam_1sd2" #f"{mode}_{algo}" + "noctua_test" # if you want a specific name give it here
+            run_name       = "hyperbays" #f"{mode}_{algo}" + "noctua_test" # if you want a specific name give it here
             description    = "acc_hist"
 
             mydb = db.connect(host="131.234.250.119", user="noctua", passwd="uncertainty", database="uncertainty")

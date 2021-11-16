@@ -17,7 +17,7 @@ local          = False
 vertical_plot  = False
 
 
-single_plot    = False
+single_plot    = True
 color_correct  = False
 job_id         = True
 sort_legend    = True
@@ -26,20 +26,20 @@ legend_flag    = True
 
 kendalltau     = True 
 
-# data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "QSAR", "spambase", "blod", "bank", "wine_qw"]  #
+# data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "QSAR", "spambase", "blod", "bank", "wine_qw", "fashionMnist", "cifar10small"]  #
 # data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod"] 
 # data_list = ["climate", "parkinsons", "spambase"]
-data_list = ["spambase"]
+data_list = ["wine"]
 modes     = "eat"
 
 for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name    = "1sd"
-    plot_name   = f"{data}_{run_name}"
+    run_name    = "hyperbays"
+    plot_name   = f"{data}_{run_name}_single"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND run_name='{run_name}'"
-    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=6465 OR id=6429" 
+    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=6511" 
 
     ########################################################################################################################################################
 
@@ -177,7 +177,7 @@ for data in data_list:
                 linestyle = '--'
             # if "out" in legend:
             #     linestyle = ':'
-            if "bays" in legend:
+            if "bays " in legend:
                 linestyle = ':'
             
             alpha = 0.8
@@ -228,6 +228,12 @@ for data in data_list:
                     alpha = 0.7
                 if "out" in legend:
                     color = "black"
+                if "hyperbayshyper" in legend:
+                    color = "red"
+                if "hyperbaysall" in legend:
+                    color = "black"
+                if "hyperbaysavg" in legend:
+                    color = "blue"
             else:
                 color = None
 
