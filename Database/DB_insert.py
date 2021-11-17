@@ -3,12 +3,12 @@ import os
 
 auto_run = False
 
-data_names     = ["Jdata/parkinsons", "Jdata/vertebral","Jdata/ionosphere", "Jdata/climate", "Jdata/breast", "Jdata/QSAR", "Jdata/spambase", "Jdata/blod" ,"Jdata/bank", "Jdata/wine_qw", "Jdata/fashionMnist", "Jdata/cifar10small"] # , "Jdata/dbpedia"
-# data_names     = ["Jdata/fashionMnist", "Jdata/cifar10small"]  #  
+# data_names     = ["Jdata/parkinsons", "Jdata/vertebral","Jdata/ionosphere", "Jdata/climate", "Jdata/breast", "Jdata/QSAR", "Jdata/spambase", "Jdata/blod" ,"Jdata/bank"] # , "Jdata/wine_qw", "Jdata/fashionMnist", "Jdata/cifar10small"
+data_names     = ["Jdata/cardiotocography", "Jdata/mfeatzernike", "Jdata/optdigits", "Jdata/pendigits", "Jdata/semeion"]  #  
 # data_names     = ["Jdata/parkinsons"]  #  fashionMnist 
 algos          = ["DF"] # ,"LR"
 modes          = ["bays", "hyperbaysavg", "hyperbayshyper", "hyperbaysall"] # , "set14.convex"
-# modes          = ["set30"] # , "set14.convex"
+# modes          = ["bays"] # , "set14.convex"
 task           = "unc"
 runs           = 20
 prams = {
