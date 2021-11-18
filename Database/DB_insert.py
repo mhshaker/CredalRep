@@ -7,7 +7,8 @@ auto_run = False
 data_names     = ["Jdata/cardiotocography", "Jdata/mfeatzernike", "Jdata/optdigits", "Jdata/pendigits", "Jdata/semeion"]  #  
 # data_names     = ["Jdata/parkinsons"]  #  fashionMnist 
 algos          = ["DF"] # ,"LR"
-modes          = ["bays", "hyperbaysavg", "hyperbayshyper", "hyperbaysall"] # , "set14.convex"
+# modes          = ["bays", "hyperbaysavg", "hyperbayshyper", "hyperbaysall"] # , "set14.convex"
+modes          = ["bays", "set30", "set13"] # , "set14.convex"
 # modes          = ["bays"] # , "set14.convex"
 task           = "unc"
 runs           = 20
@@ -31,7 +32,7 @@ prams = {
 for algo in algos:
     for data_name in data_names:
         for mode in modes:
-            run_name       = "hyperbays" #f"{mode}_{algo}" + "noctua_test" # if you want a specific name give it here
+            run_name       = "opt50_lessParam" #f"{mode}_{algo}" + "noctua_test" # if you want a specific name give it here
             description    = "acc_hist"
 
             mydb = db.connect(host="131.234.250.119", user="noctua", passwd="uncertainty", database="uncertainty")

@@ -26,7 +26,8 @@ legend_flag    = True
 
 kendalltau     = True 
 
-data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "QSAR", "spambase", "blod", "bank", "wine_qw", "fashionMnist", "cifar10small"]  #
+# data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "QSAR", "spambase", "blod", "bank", "wine_qw", "fashionMnist", "cifar10small"]  #
+data_list  = ["cardiotocography", "mfeatzernike", "optdigits", "pendigits", "semeion"]
 # data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod"] 
 # data_list = ["climate", "parkinsons", "spambase"]
 # data_list = ["parkinsons"]
@@ -36,10 +37,11 @@ for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name    = "hyperbays"
-    run_name2   = "opt50_lessParam"
-    plot_name   = f"{data}_{run_name}_L"
-    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND (run_name='{run_name}' or (run_name='{run_name2}' AND result_type!='bays'))"
+    run_name    = "opt50_lessParam"
+    # run_name2   = "opt50_lessParam"
+    plot_name   = f"{data}_{run_name}"
+    query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND run_name='{run_name}'"
+    # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND (run_name='{run_name}' or (run_name='{run_name2}' AND result_type!='bays'))"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND  id=6511 or id=6438" 
 
     ########################################################################################################################################################
@@ -176,10 +178,10 @@ for data in data_list:
                 linestyle = '--'
             if "convex" in legend:
                 linestyle = '--'
-            if "set30" in legend:
-                linestyle = '--'
-            if "set31" in legend:
-                linestyle = '--'
+            # if "set30" in legend:
+            #     linestyle = '--'
+            # if "set31" in legend:
+            #     linestyle = '--'
             # if "out" in legend:
             #     linestyle = ':'
             if "bays " in legend:
@@ -223,10 +225,10 @@ for data in data_list:
                 if "set25" in legend:
                     color = "red"
                 if "set30" in legend:
-                    color = "purple"
+                    color = "blue"
                     alpha = 0.7
                 if "set31" in legend:
-                    color = "orange"
+                    color = "red"
                     alpha = 0.7
                 if "set32" in legend:
                     color = "purple"
