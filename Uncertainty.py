@@ -134,7 +134,7 @@ if __name__ == '__main__':
     'split'              : 0.3,
     'run_start'          : 0,
     'cv'                 : 0,
-    'opt_decision_model' : False
+    'opt_decision_model' : True
     }
 
     base_dir = os.path.dirname(os.path.realpath(__file__))

@@ -3,8 +3,6 @@ import numpy as np
 import UncertaintyM as unc
 import random
 from  ens_nn import ensnnClassifier
-from sklearn.ensemble import BaggingClassifier
-from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.metrics import log_loss
 
@@ -16,23 +14,13 @@ def NN_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         unc_mode = us[1] # spliting the active selection mode (_a _e _t) from the unc method because DF dose not work with that
 
     if opt_decision_model or "set30" in unc_method or "set31" in unc_method:
-        # find max depth range
-        depth_model = BaggingClassifier(pram["n_estimator_predict"], random_state=seed)
-        depth_model.fit(x_train, y_train)
-        max_depth = 0
-        for estimator in depth_model.estimators_:
-            d = estimator.tree_.max_depth
-            if d > max_depth:
-                max_depth = d
-        if log:
-            print("------------------------------------max_depth test ")
-            print(max_depth)
 
         pram_grid = {
-            "n_estimators":      [pram["n_estimators"]]
+            "nodes"       : [5,10,15],  
+            "n_estimators": [pram["n_estimators"]]
         }
 
-        opt = RandomizedSearchCV(estimator=BaggingClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], cv=10, random_state=seed)
+        opt = RandomizedSearchCV(estimator=ensnnClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], cv=10, random_state=seed)
         opt_result = opt.fit(x_train, y_train)      
 
         params_searched = np.array(opt_result.cv_results_["params"])
@@ -59,7 +47,7 @@ def NN_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         main_model = ensnnClassifier(3, 20, pram["n_estimator_predict"], seed)
         
     else:
-        main_model = BaggingClassifier(**params_searched[0],random_state=seed)
+        main_model = ensnnClassifier(**params_searched[0],random_state=seed)
 
     main_model.fit(x_train, y_train)
     print("succsesfully trained the NN model acc=", main_model.score(x_test, y_test))
