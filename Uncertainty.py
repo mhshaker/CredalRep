@@ -6,8 +6,7 @@ import numpy as np
 import Data.data_provider as dp
 import Data.data_generator as dg
 import Algo.a_DF as df
-# import Algo.a_eRF as erf
-# import Algo.a_Tree as tree
+import Algo.a_NN as nn
 import mysql.connector as db
 import sklearn
 import ray
@@ -23,6 +22,9 @@ def uncertainty_quantification(seed, features, target, prams, mode, algo, dir, o
     
     if algo == "DF":
         predictions , t_unc, e_unc, a_unc, model = df.DF_run(x_train, x_test, y_train, y_test, prams, unc_method, seed, opt_decision_model=opt_decision_model)
+        probs = model.predict_proba(x_test)
+    elif algo == "NN":
+        predictions , t_unc, e_unc, a_unc, model = nn.NN_run(x_train, x_test, y_train, y_test, prams, unc_method, seed, opt_decision_model=opt_decision_model)
         probs = model.predict_proba(x_test)
     # elif algo == "eRF":
     #     predictions , t_unc, e_unc, a_unc, model = erf.eRF_run(x_train, x_test, y_train, y_test, prams, unc_method, seed)
@@ -74,6 +76,9 @@ def uncertainty_quantification_cv(seed, x_train, x_test, y_train, y_test, prams,
     if algo == "DF":
         predictions , t_unc, e_unc, a_unc, model = df.DF_run(x_train, x_test, y_train, y_test, prams, unc_method, seed, opt_decision_model=opt_decision_model)
         probs = model.predict_proba(x_test)
+    elif algo == "NN":
+        predictions , t_unc, e_unc, a_unc, model = nn.NN_run(x_train, x_test, y_train, y_test, prams, unc_method, seed, opt_decision_model=opt_decision_model)
+        probs = model.predict_proba(x_test)
     else:
         print("[ERORR] Undefined Algo")
         exit()
@@ -113,9 +118,9 @@ if __name__ == '__main__':
     job_id = 0 # for developement
     seed   = 1
     runs = 1
-    data_name = "Jdata/parkinsons"
-    algo = "DF"
-    unc_method = "hyperbays"
+    data_name = "Jdata/climate"
+    algo = "NN"
+    unc_method = "random"
     prams = {
     # 'criterion'          : "entropy",
     # 'max_features'       : "auto",
@@ -126,10 +131,10 @@ if __name__ == '__main__':
     'epsilon'            : 1.001,
     'credal_size'        : 999,
     'laplace_smoothing'  : 1,
-    'split'              : 0.025,
+    'split'              : 0.3,
     'run_start'          : 0,
     'cv'                 : 0,
-    'opt_decision_model' : True
+    'opt_decision_model' : False
     }
 
     base_dir = os.path.dirname(os.path.realpath(__file__))

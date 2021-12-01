@@ -4,15 +4,7 @@ import UncertaintyM as unc
 import random
 from sklearn.ensemble import BaggingClassifier
 from sklearn.neural_network import MLPClassifier
-
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.utils import resample
-from sklearn.metrics import log_loss
-from sklearn.model_selection import cross_val_score
-from skopt import BayesSearchCV
 from sklearn.model_selection import RandomizedSearchCV
-from sklearn.cluster import KMeans
-
 
 def NN_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=True, opt_decision_model=True, log=False):
     np.random.seed(seed)
@@ -23,7 +15,7 @@ def NN_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
 
     if opt_decision_model or unc_method =="set24" or unc_method =="set25" or "set30" in unc_method or "set31" in unc_method or unc_method =="set32": # or 27 or 28 or 24mix but they are not good and I dont plan on using them
         # find max depth range
-        depth_model = RandomForestClassifier(pram["n_estimator_predict"], random_state=seed)
+        depth_model = BaggingClassifier(pram["n_estimator_predict"], random_state=seed)
         depth_model.fit(x_train, y_train)
         max_depth = 0
         for estimator in depth_model.estimators_:
@@ -41,7 +33,7 @@ def NN_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
             "n_estimators":      [pram["n_estimators"]]
         }
 
-        opt = RandomizedSearchCV(estimator=RandomForestClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], cv=10, random_state=seed)
+        opt = RandomizedSearchCV(estimator=BaggingClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], cv=10, random_state=seed)
         opt_result = opt.fit(x_train, y_train)      
 
         params_searched = np.array(opt_result.cv_results_["params"])
@@ -65,18 +57,18 @@ def NN_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
 
     main_model = None
     if opt_decision_model == False:
-        main_model = RandomForestClassifier(bootstrap=True,
-            # criterion=pram['criterion'],
-            max_depth=pram["max_depth"],
-            # max_features= pram["max_features"],
+        main_model = BaggingClassifier(bootstrap=True,
+            base_estimator=MLPClassifier(hidden_layer_sizes=(20, 10, 10), random_state=seed), # max_iter=500, 
             n_estimators=pram["n_estimator_predict"],
             random_state=seed,
             verbose=0,
             warm_start=False)
+        
     else:
-        main_model = RandomForestClassifier(**params_searched[0],random_state=seed)
+        main_model = BaggingClassifier(**params_searched[0],random_state=seed)
 
     main_model.fit(x_train, y_train)
+    print("succsesfully trained the NN model acc=", main_model.score(x_test, y_test))
 
     if predict:
         prediction = main_model.predict(x_test)
@@ -96,7 +88,7 @@ def NN_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
     else:
         print(f"[Error] No implementation of unc_method {unc_method} for DF")
 
-    return prediction, total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty, model
+    return prediction, total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty, main_model
 
 
 def get_likelyhood(model_ens, x_train, y_train, laplace_smoothing, a=0, b=0, log=False):
