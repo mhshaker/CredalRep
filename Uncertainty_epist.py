@@ -140,7 +140,8 @@ if __name__ == '__main__':
     'split'              : 0.30,
     'run_start'          : 0,
     'cv'                 : 0,
-    'opt_decision_model' : False
+    'opt_decision_model' : False,
+    'ood_dataset'        : "Jdata/fashionMnist",
     }
 
     base_dir = os.path.dirname(os.path.realpath(__file__))
@@ -162,50 +163,25 @@ if __name__ == '__main__':
         mycursor.execute(f"UPDATE experiments SET results='{dir}' Where id={job_id}")
         mydb.commit()
 
-    # run the model
-    if "test_" in data_name:
-        n = prams["n_estimators"]
-        m = prams["unc_method"]
-        print(f"{data_name} n_estimators {n} unc_method {m}")
-        x_train, x_test, y_train, y_test = dg.create(data_name)
-        predictions , t_unc, e_unc, a_unc, model = df.DF_run(x_train, x_test, y_train, y_test, prams, unc_method, seed)
-        t = np.round(t_unc, decimals=2)
-        a = np.round(a_unc, decimals=2)
-        e = np.round(e_unc, decimals=2)
-        rt = np.argsort(-t_unc)
-        re = np.argsort(-e_unc)
-        ra = np.argsort(-a_unc)
-        rt += 1
-        ra += 1
-        re += 1
-        print(x_test)
-        print("------------------------------------")
-        print("t_unc ", t, " relative index:", rt)
-        print("e_unc ", e, " relative index:", re)
-        print("a_unc ", a, " relative index:", ra)
-        print(f"All score: {model.score(x_train, y_train)}")
-        exit()
+    features, target = dp.load_data(data_name)
 
+    print(f"job_id {job_id} start")
+    start = prams["run_start"]
+    ray.init()
+    ray_array = []
+    if prams["cv"] == 0:
+        for seed in range(start,runs+start):
+            ray_array.append(uncertainty_quantification.remote(seed, features, target, prams, unc_method, algo, dir, prams["opt_decision_model"]))
     else:
-        features, target = dp.load_data(data_name)
+        cv_outer = KFold(n_splits=prams["cv"], shuffle=True, random_state=1)
+        seed = start
+        for train_ix, test_ix in cv_outer.split(features):
+            x_train, x_test = features[train_ix, :], features[test_ix, :]
+            y_train, y_test = target[train_ix], target[test_ix]
+            ray_array.append(uncertainty_quantification_cv.remote(seed, x_train, x_test, y_train, y_test, prams, unc_method, algo, dir, prams["opt_decision_model"]))
+            seed += 1
 
-        print(f"job_id {job_id} start")
-        start = prams["run_start"]
-        ray.init()
-        ray_array = []
-        if prams["cv"] == 0:
-            for seed in range(start,runs+start):
-                ray_array.append(uncertainty_quantification.remote(seed, features, target, prams, unc_method, algo, dir, prams["opt_decision_model"]))
-        else:
-            cv_outer = KFold(n_splits=prams["cv"], shuffle=True, random_state=1)
-            seed = start
-            for train_ix, test_ix in cv_outer.split(features):
-                x_train, x_test = features[train_ix, :], features[test_ix, :]
-                y_train, y_test = target[train_ix], target[test_ix]
-                ray_array.append(uncertainty_quantification_cv.remote(seed, x_train, x_test, y_train, y_test, prams, unc_method, algo, dir, prams["opt_decision_model"]))
-                seed += 1
-
-        res_array = ray.get(ray_array)
+    res_array = ray.get(ray_array)
 
 
     if len(sys.argv) > 1:
