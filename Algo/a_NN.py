@@ -5,6 +5,7 @@ import random
 from sklearn.ensemble import BaggingClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import RandomizedSearchCV
+from sklearn.metrics import log_loss
 
 def NN_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=True, opt_decision_model=True, log=False):
     np.random.seed(seed)
@@ -13,7 +14,7 @@ def NN_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
     if len(us) > 1:
         unc_mode = us[1] # spliting the active selection mode (_a _e _t) from the unc method because DF dose not work with that
 
-    if opt_decision_model or unc_method =="set24" or unc_method =="set25" or "set30" in unc_method or "set31" in unc_method or unc_method =="set32": # or 27 or 28 or 24mix but they are not good and I dont plan on using them
+    if opt_decision_model or "set30" in unc_method or "set31" in unc_method:
         # find max depth range
         depth_model = BaggingClassifier(pram["n_estimator_predict"], random_state=seed)
         depth_model.fit(x_train, y_train)
@@ -27,9 +28,6 @@ def NN_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
             print(max_depth)
 
         pram_grid = {
-            "max_depth" :        np.arange(1,max_depth),
-            "criterion" :        ["gini", "entropy"],
-            "max_features" :     ["sqrt", "log2"],
             "n_estimators":      [pram["n_estimators"]]
         }
 
@@ -58,7 +56,7 @@ def NN_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
     main_model = None
     if opt_decision_model == False:
         main_model = BaggingClassifier(bootstrap=True,
-            base_estimator=MLPClassifier(hidden_layer_sizes=(20, 10, 10), random_state=seed), # max_iter=500, 
+            base_estimator=MLPClassifier(hidden_layer_sizes=[20,10,10], random_state=seed), # max_iter=500, 
             n_estimators=pram["n_estimator_predict"],
             random_state=seed,
             verbose=0,
@@ -80,7 +78,6 @@ def NN_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         porb_matrix = get_prob(main_model, x_test, pram["laplace_smoothing"])
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_ent_bays(porb_matrix, likelyhoods)
 
-
     elif "random" == unc_method:
         total_uncertainty = np.random.rand(len(x_test))
         epistemic_uncertainty = np.random.rand(len(x_test))
@@ -92,7 +89,34 @@ def NN_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
 
 
 def get_likelyhood(model_ens, x_train, y_train, laplace_smoothing, a=0, b=0, log=False):
-    pass
+    likelyhoods  = []
+    for estimator in model_ens.estimators_:
+        if laplace_smoothing == 0 and a==0 and b==0:
+            tree_prob_train = estimator.predict_proba(x_train) 
+        else:
+            pass
+
+        likelyhoods.append(log_loss(y_train,tree_prob_train))
+    likelyhoods = np.array(likelyhoods)
+    likelyhoods = np.exp(-likelyhoods) # convert log likelihood to likelihood
+    likelyhoods = likelyhoods / np.sum(likelyhoods) # normalization of the likelihood
+
+    if log:
+        print(f"<log>----------------------------------------[]")
+        print(f"likelyhoods = {likelyhoods}")
+    return np.array(likelyhoods)
 
 def get_prob(model_ens, x_data, laplace_smoothing, a=0, b=0, log=False):
-    pass
+    prob_matrix  = []
+    for estimator in model_ens.estimators_:
+        if laplace_smoothing == 0 and a==0 and b==0:
+            tree_prob = estimator.predict_proba(x_data) 
+        else:
+            pass
+        prob_matrix.append(tree_prob)
+    if log:
+        print(f"<log>----------------------------------------[]")
+        print(f"prob_matrix = {prob_matrix}")
+    prob_matrix = np.array(prob_matrix)
+    prob_matrix = prob_matrix.transpose([1,0,2]) # D1 = data index D2= ens tree index D3= prediction prob for classes
+    return prob_matrix
