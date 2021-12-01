@@ -120,7 +120,7 @@ if __name__ == '__main__':
     runs = 1
     data_name = "Jdata/climate"
     algo = "NN"
-    unc_method = "random"
+    unc_method = "bays"
     prams = {
     # 'criterion'          : "entropy",
     # 'max_features'       : "auto",
@@ -130,7 +130,7 @@ if __name__ == '__main__':
     'opt_iterations'     : 17,
     'epsilon'            : 1.001,
     'credal_size'        : 999,
-    'laplace_smoothing'  : 1,
+    'laplace_smoothing'  : 0,
     'split'              : 0.3,
     'run_start'          : 0,
     'cv'                 : 0,
