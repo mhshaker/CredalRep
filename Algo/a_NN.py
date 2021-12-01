@@ -2,6 +2,7 @@ import os
 import numpy as np
 import UncertaintyM as unc
 import random
+from  ens_nn import ensnnClassifier
 from sklearn.ensemble import BaggingClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import RandomizedSearchCV
@@ -55,12 +56,7 @@ def NN_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
 
     main_model = None
     if opt_decision_model == False:
-        main_model = BaggingClassifier(bootstrap=True,
-            base_estimator=MLPClassifier(hidden_layer_sizes=[20,10,10], random_state=seed), # max_iter=500, 
-            n_estimators=pram["n_estimator_predict"],
-            random_state=seed,
-            verbose=0,
-            warm_start=False)
+        main_model = ensnnClassifier(3, 20, pram["n_estimator_predict"], seed)
         
     else:
         main_model = BaggingClassifier(**params_searched[0],random_state=seed)
@@ -74,8 +70,8 @@ def NN_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         prediction = 0
 
     if "bays" == unc_method:
-        likelyhoods = get_likelyhood(main_model, x_train, y_train, pram["laplace_smoothing"])
-        porb_matrix = get_prob(main_model, x_test, pram["laplace_smoothing"])
+        likelyhoods = get_likelyhood(main_model.model, x_train, y_train, pram["laplace_smoothing"])
+        porb_matrix = get_prob(main_model.model, x_test, pram["laplace_smoothing"])
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_ent_bays(porb_matrix, likelyhoods)
 
     elif "random" == unc_method:

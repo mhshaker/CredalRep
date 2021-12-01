@@ -2,7 +2,7 @@ from sklearn.ensemble import BaggingClassifier
 from sklearn.neural_network import MLPClassifier
 
 
-class ens_nn:
+class ensnnClassifier:
 
     def __init__(self, n_layers, nodes, n_estimators, random_state) -> None:
 
@@ -18,7 +18,11 @@ class ens_nn:
                                         verbose=0,
                                         warm_start=False)
 
+    def fit(self, x_train, y_train):
+        return self.model.fit(x_train, y_train)
     def predict(self, x_test):
         return self.model.predict(x_test)
     def predict_proba(self, x_test):
         return self.model.predict_proba(x_test)
+    def score(self, x_test, y_test):
+        return self.model.score(x_test, y_test)
