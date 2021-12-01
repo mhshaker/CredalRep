@@ -5,8 +5,9 @@ import random
 from  ens_nn import ensnnClassifier
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.metrics import log_loss
+import math
 
-def NN_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=True, opt_decision_model=True, log=False):
+def NN_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=True, opt_decision_model=True, log=True):
     np.random.seed(seed)
     us = unc_method.split('_')
     unc_method = us[0]
@@ -16,11 +17,12 @@ def NN_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
     if opt_decision_model or "set30" in unc_method or "set31" in unc_method:
 
         pram_grid = {
-            "nodes"       : [5,10,15],  
+            "nodes"       : np.arange(int(math.sqrt(x_train.shape[1])),x_train.shape[1]),  
+            "n_layers"       : np.arange(2,10),  
             "n_estimators": [pram["n_estimators"]]
         }
 
-        opt = RandomizedSearchCV(estimator=ensnnClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], cv=10, random_state=seed)
+        opt = RandomizedSearchCV(estimator=ensnnClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], cv=3, random_state=seed)
         opt_result = opt.fit(x_train, y_train)      
 
         params_searched = np.array(opt_result.cv_results_["params"])
@@ -50,7 +52,6 @@ def NN_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         main_model = ensnnClassifier(**params_searched[0],random_state=seed)
 
     main_model.fit(x_train, y_train)
-    print("succsesfully trained the NN model acc=", main_model.score(x_test, y_test))
 
     if predict:
         prediction = main_model.predict(x_test)
@@ -61,6 +62,58 @@ def NN_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         likelyhoods = get_likelyhood(main_model.model, x_train, y_train, pram["laplace_smoothing"])
         porb_matrix = get_prob(main_model.model, x_test, pram["laplace_smoothing"])
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_ent_bays(porb_matrix, likelyhoods)
+    elif "set30" == unc_method: # GH credal set from hyper forests
+        credal_prob_matrix = []
+        # Confidance interval
+        conf_int = params_score_mean[0] -  1 * params_score_std[0] # include SD which is 99%
+        index = len(params_score_mean) - 1
+        while params_score_mean[index] < conf_int:
+            index -= 1
+        if index == 0:
+            index = 1
+        
+        params_searched = params_searched[: index]
+        params_rank = params_rank[: index]
+        if log:
+            print("------------------------------------")
+            print(f"conf_int cut index {index}")
+
+        for i, param in enumerate(params_searched): # opt_pram_list:
+            if log: 
+                print(f"Acc:{params_score_mean[i]:.4f} +-{params_score_std[i]:.4f} {param}")  # Eyke log
+            model = None
+            model = ensnnClassifier(**param,random_state=seed)
+            model.fit(x_train, y_train)
+            test_prob = model.predict_proba(x_test)
+            credal_prob_matrix.append(test_prob)
+
+        porb_matrix = np.array(credal_prob_matrix)
+        porb_matrix = porb_matrix.transpose([1,0,2]) # convert to the format that uncertainty_set14 uses ## laplace smoothing has no effect on set20
+        total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set14(porb_matrix)
+
+    elif "set31" == unc_method: # Ent version of set30
+        credal_prob_matrix = []
+        likelyhoods = []
+        # Confidance interval
+        conf_int = params_score_mean[0] -  2 * params_score_std[0] # include SD which is 99%
+        index = len(params_score_mean) - 1
+        while params_score_mean[index] < conf_int:
+            index -= 1
+        if index == 0:
+            index = 1
+        params_searched = params_searched[: index]
+        params_rank = params_rank[: index]
+
+        for param in params_searched: # opt_pram_list: 
+            model = None
+            model = ensnnClassifier(**param,random_state=seed)
+            model.fit(x_train, y_train)
+            test_prob = model.predict_proba(x_test)
+            credal_prob_matrix.append(test_prob)
+
+        porb_matrix = np.array(credal_prob_matrix)
+        porb_matrix = porb_matrix.transpose([1,0,2]) # convert to the format that uncertainty_set14 uses ## laplace smoothing has no effect on set20
+        total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set15(porb_matrix)
 
     elif "random" == unc_method:
         total_uncertainty = np.random.rand(len(x_test))

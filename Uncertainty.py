@@ -118,16 +118,16 @@ if __name__ == '__main__':
     job_id = 0 # for developement
     seed   = 1
     runs = 1
-    data_name = "Jdata/climate"
+    data_name = "Jdata/parkinsons"
     algo = "NN"
-    unc_method = "bays"
+    unc_method = "set30"
     prams = {
     # 'criterion'          : "entropy",
     # 'max_features'       : "auto",
     'max_depth'          : 100,
     'n_estimators'       : 10,
     'n_estimator_predict': 10,
-    'opt_iterations'     : 17,
+    'opt_iterations'     : 2,
     'epsilon'            : 1.001,
     'credal_size'        : 999,
     'laplace_smoothing'  : 0,

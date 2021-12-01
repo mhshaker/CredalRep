@@ -1,5 +1,8 @@
 from sklearn.ensemble import BaggingClassifier
 from sklearn.neural_network import MLPClassifier
+from sklearn.utils._testing import ignore_warnings
+from sklearn.exceptions import ConvergenceWarning
+import numpy as np
 
 
 class ensnnClassifier:
@@ -10,9 +13,9 @@ class ensnnClassifier:
         self.n_estimators = n_estimators
         self.random_state = random_state
 
-        hidden_layer_sizes = []
-        for i in range(self.n_layers):
-            hidden_layer_sizes.append(self.nodes)
+        hidden_layer_sizes = np.full(self.n_layers, self.nodes)
+        # for i in range(self.n_layers):
+        #     hidden_layer_sizes.append(self.nodes)
 
         self.model = BaggingClassifier( bootstrap=True,
                                         base_estimator=MLPClassifier(hidden_layer_sizes=hidden_layer_sizes, 
@@ -21,7 +24,7 @@ class ensnnClassifier:
                                         random_state=self.random_state,
                                         verbose=0,
                                         warm_start=False)
-
+    @ignore_warnings(category=ConvergenceWarning)
     def fit(self, x_train, y_train):
         return self.model.fit(x_train, y_train)
     def predict(self, x_test):
