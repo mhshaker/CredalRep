@@ -18,7 +18,7 @@ vertical_plot  = False
 
 
 single_plot    = False
-color_correct  = True
+color_correct  = False
 job_id         = True
 sort_legend    = True
 in_plot_legend = False
@@ -27,17 +27,17 @@ legend_flag    = True
 kendalltau     = True 
 
 # data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "QSAR", "spambase", "blod", "bank", "wine_qw", "fashionMnist", "cifar10small"]  #
-data_list  = ["cardiotocography", "mfeatzernike", "optdigits", "pendigits", "semeion"]
+# data_list  = ["cardiotocography", "mfeatzernike", "optdigits", "pendigits", "semeion"]
 # data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod"] 
 # data_list = ["climate", "parkinsons", "spambase"]
-# data_list = ["parkinsons"]
+data_list = ["semeion"]
 modes     = "eat"
 
 for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name    = "opt50_lessParam"
+    run_name    = "cv_test"
     # run_name2   = "opt50_lessParam"
     plot_name   = f"{data}_{run_name}"
     query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND run_name='{run_name}'"
