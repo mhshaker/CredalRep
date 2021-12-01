@@ -17,9 +17,11 @@ def NN_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
     if opt_decision_model or "set30" in unc_method or "set31" in unc_method:
 
         pram_grid = {
-            "nodes"       : np.arange(int(math.sqrt(x_train.shape[1])),x_train.shape[1]),  
-            "n_layers"       : np.arange(2,10),  
-            "n_estimators": [pram["n_estimators"]]
+            "nodes"             : np.arange(int(math.sqrt(x_train.shape[1])),x_train.shape[1]),  
+            "n_layers"          : np.arange(2,10),
+            "learning_rate"     : ['constant', 'invscaling', 'adaptive'],
+            "learning_rate_init" : [0.001, 0.005, 0.01],
+            "n_estimators"      : [pram["n_estimators"]]
         }
 
         opt = RandomizedSearchCV(estimator=ensnnClassifier(), param_distributions=pram_grid, n_iter=pram["opt_iterations"], cv=3, random_state=seed)

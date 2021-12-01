@@ -6,7 +6,7 @@ auto_run = False
 # data_names     = ["Jdata/parkinsons", "Jdata/vertebral","Jdata/ionosphere", "Jdata/climate", "Jdata/breast", "Jdata/blod" ,"Jdata/bank", "Jdata/QSAR", "Jdata/spambase"] # , 
 # data_names     = ["Jdata/wine_qw", "Jdata/mfeatzernike", "Jdata/optdigits", "Jdata/pendigits", "Jdata/semeion"]  #  , "Jdata/mnist", "Jdata/fashionMnist", "Jdata/cifar10small"
 data_names     = ["Jdata/parkinsons"]  #  fashionMnist 
-algos          = ["DF"] # ,"LR"
+algos          = ["NN"] # ,"LR"
 # modes          = ["bays", "hyperbaysavg", "hyperbayshyper", "hyperbaysall"] # , "set14.convex"
 modes          = ["bays", "set30", "set31"] # , "set14.convex"
 # modes          = ["set30"] # , "set14.convex"
@@ -21,7 +21,7 @@ prams = {
 'opt_iterations'     : 20,
 'epsilon'            : 2,
 # 'credal_size'        : 999,
-'laplace_smoothing'  : 1,
+'laplace_smoothing'  : 0,
 'split'              : 0.30,
 'run_start'          : 0,
 'cv'                 : 10,
@@ -32,7 +32,7 @@ prams = {
 for algo in algos:
     for data_name in data_names:
         for mode in modes:
-            run_name       = "df_comp" #f"{mode}_{algo}" + "noctua_test" # if you want a specific name give it here
+            run_name       = "NN_moreParam" #f"{mode}_{algo}" + "noctua_test" # if you want a specific name give it here
             description    = "acc_hist"
 
             mydb = db.connect(host="131.234.250.119", user="noctua", passwd="uncertainty", database="uncertainty")
