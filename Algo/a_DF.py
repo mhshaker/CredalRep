@@ -2,7 +2,7 @@ import os
 import numpy as np
 import UncertaintyM as unc
 import random
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 from sklearn.utils import resample
 from sklearn.metrics import log_loss
 from sklearn.model_selection import cross_val_score
@@ -11,10 +11,11 @@ from sklearn.model_selection import RandomizedSearchCV
 from sklearn.cluster import KMeans
 
 
-def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=True, opt_decision_model=True, log=False):
+def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=True, opt_decision_model=True, equal_model_prediction=True ,log=False):
     np.random.seed(seed)
     us = unc_method.split('_')
     unc_method = us[0]
+
     if len(us) > 1:
         unc_mode = us[1] # spliting the active selection mode (_a _e _t) from the unc method because DF dose not work with that
 
@@ -73,7 +74,7 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
     if opt_decision_model == False:
         main_model = RandomForestClassifier(bootstrap=True,
             # criterion=pram['criterion'],
-            max_depth=pram["max_depth"],
+            # max_depth=pram["max_depth"],
             # max_features= pram["max_features"],
             n_estimators=pram["n_estimator_predict"],
             random_state=seed,
@@ -95,7 +96,6 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         prediction = main_model.predict(x_test)
     else:
         prediction = 0
-
 
     if "ent" == unc_method:
         porb_matrix = get_prob_matrix(main_model, x_test, pram["n_estimators"], pram["laplace_smoothing"])
@@ -571,15 +571,21 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
             print("------------------------------------")
             print(f"conf_int cut index {index}")
 
+        model_list = []
+        for i, param in enumerate(params_searched): # opt_pram_list:
+            model_list.append((f"index_{i}", RandomForestClassifier(**param,random_state=seed)))
+
+        votingModel = VotingClassifier(estimators=model_list, voting='hard')
+        votingModel.fit(x_train, y_train)
+
         for i, param in enumerate(params_searched): # opt_pram_list:
             if log: 
                 print(f"Acc:{params_score_mean[i]:.4f} +-{params_score_std[i]:.4f} {param}")  # Eyke log
-            model = None
-            model = RandomForestClassifier(**param,random_state=seed)
-            model.fit(x_train, y_train)
-            test_prob = model.predict_proba(x_test)
+            test_prob = votingModel.estimators_[i].predict_proba(x_test)
             credal_prob_matrix.append(test_prob)
 
+        if equal_model_prediction==False:
+            prediction  = votingModel.predict(x_test)
         porb_matrix = np.array(credal_prob_matrix)
         porb_matrix = porb_matrix.transpose([1,0,2]) # convert to the format that uncertainty_set14 uses ## laplace smoothing has no effect on set20
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_set14(porb_matrix)
@@ -799,6 +805,7 @@ def DF_run(x_train, x_test, y_train, y_test, pram, unc_method, seed, predict=Tru
         # accs = get_acc(main_model, x_train, y_train, pram["n_estimators"])
         porb_matrix = get_prob2(main_model, x_test, pram["laplace_smoothing"])
         total_uncertainty, epistemic_uncertainty, aleatoric_uncertainty = unc.uncertainty_ent_bays(porb_matrix, likelyhoods)
+        # aleatoric_uncertainty = np.zeros(aleatoric_uncertainty.shape)
     elif "bays2" == unc_method:
         model = None
         model = RandomForestClassifier(bootstrap=True,

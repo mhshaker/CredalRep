@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import UncertaintyM as unc
 import warnings
 from sklearn import metrics
+import pandas as pd
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
 pic_dir = f"{base_dir}/pic/unc"
@@ -19,20 +20,27 @@ color_correct = True
 vertical_plot = False
 single_plot = False
 legend_flag = False
+table_flag  = True
 
-data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod", "bank", "QSAR", "spambase"] 
+# data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod", "bank", "QSAR", "spambase"] 
 # data_list  = ["vertebral","breast", "ionosphere", "blod", "QSAR", "wine_qw"] 
 # data_list = ["climate", "parkinsons", "spambase"]
 # data_list = ["climate", "vertebral"]
-# data_list = ["parkinsons"]
+data_list = ["parkinsons"]
 modes     = "eat"
+
+if table_flag:
+    tabel_df = pd.DataFrame(columns=['Dataset','AL','AU','AD','AP','ES','EH','TA', 'TP'])
 
 for data in data_list:
     
+    if table_flag:
+        tabel_df = tabel_df.append({'Dataset': data}, ignore_index=True)
+
     # prameters ############################################################################################################################################
 
-    run_name  = "ROC_area"
-    plot_name = data + "_area"
+    run_name  = "CredalRepPaperUAI100test"  # last run name -> ROC_area 
+    plot_name = data + "_" + run_name
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND (run_name='{run_name}' AND result_type='set18' OR run_name='unc_out2' AND result_type='out')"
     query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND id>=4984 AND id<=4986"
@@ -139,8 +147,8 @@ for data in data_list:
             #     linestyle = ':'
             # if "set18" in legend:
             #     linestyle = ':'
-            if "out" in legend:
-                linestyle = '--'
+            # if "out" in legend:
+            #     linestyle = '--'
 
             if color_correct:
                 color = "black"
@@ -190,29 +198,35 @@ for data in data_list:
                         plot_legend = "AL"
                     if "Levi-GH" in legend:
                         plot_legend = "AD"
+                        color = "orange"
                     if "Outcome" in legend:
-                        plot_legend = "AO"
+                        plot_legend = "AP"
                     # make the exception for AU in mode==t
                 if mode == "e":
                     if "Levi-GH" in legend:
-                        plot_legend = "EM"
+                        plot_legend = "EH"
                     if "Levi-Ent" in legend:
-                        plot_legend = "EU"
+                        plot_legend = "ES"
                 if mode == "t":
                     if "Levi-GH" in legend:
                         # Exception for AU
-                        axs[1].plot(steps, avg_acc, linestyle='--', color=color, label="AU" + f"(AUC {acc_rej_area:.2f})")
+                        axs[1].plot(steps, avg_acc, color=color, label="AU" + f"(AUC {acc_rej_area:.2f})") # linestyle='--'
                         axs[1].legend()
+                        if table_flag:
+                            tabel_df.at[tabel_df.index[-1], 'AU'] = round(acc_rej_area,2)
 
                         plot_legend = "TA"
                         
                     if "Outcome" in legend:
-                        plot_legend = "TO"
+                        plot_legend = "TP"
                 # print(">>>>> ", plot_legend)
 
                 if len(plot_legend)>0:
                     axs[mode_index].plot(steps, avg_acc, linestyle=linestyle, color=color, label=plot_legend + f"(AUC {acc_rej_area:.2f})")
                     axs[mode_index].legend()
+                    if table_flag:
+                        tabel_df.at[tabel_df.index[-1], plot_legend] = round(acc_rej_area,2)
+
             
             if mode == "a":
                 mode_title = "AU"
@@ -257,3 +271,9 @@ for data in data_list:
     fig.savefig(f"./pic/unc/{plot_name}.png",bbox_inches='tight')
     # fig.close()
     print(f"Plot {plot_name} Done")
+if table_flag:
+    tabel_df.set_index('Dataset', inplace=True)
+    tabel_df.loc['mean'] = round(tabel_df.mean(),2)
+    # pd.options.display.float_format = "{:,.2f}".format
+    print(tabel_df)
+    tabel_df.to_csv(f"./pic/unc/table.csv")

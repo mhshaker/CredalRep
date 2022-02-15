@@ -16,12 +16,12 @@ from skopt import BayesSearchCV
 from sklearn.ensemble import RandomForestClassifier
 
 @ray.remote
-def uncertainty_quantification(seed, features, target, prams, mode, algo, dir, opt_decision_model=True):
+def uncertainty_quantification(seed, features, target, prams, unc_method, algo, dir, opt_decision_model=True):
     s_time = time.time()
     x_train, x_test, y_train, y_test = dp.split_data(features, target, split=prams["split"], seed=seed)
     
     if algo == "DF":
-        predictions , t_unc, e_unc, a_unc, model = df.DF_run(x_train, x_test, y_train, y_test, prams, unc_method, seed, opt_decision_model=opt_decision_model)
+        predictions , t_unc, e_unc, a_unc, model = df.DF_run(x_train, x_test, y_train, y_test, prams, unc_method, seed, opt_decision_model=opt_decision_model, equal_model_prediction=prams["equal_model_prediction"])
         probs = model.predict_proba(x_test)
     elif algo == "NN":
         predictions , t_unc, e_unc, a_unc, model = nn.NN_run(x_train, x_test, y_train, y_test, prams, unc_method, seed, opt_decision_model=opt_decision_model)
@@ -70,11 +70,11 @@ def uncertainty_quantification(seed, features, target, prams, mode, algo, dir, o
     print(f"{seed} :{run_time}s")
 
 @ray.remote
-def uncertainty_quantification_cv(seed, x_train, x_test, y_train, y_test, prams, mode, algo, dir, opt_decision_model=True):
+def uncertainty_quantification_cv(seed, x_train, x_test, y_train, y_test, prams, unc_method, algo, dir, opt_decision_model=True):
     s_time = time.time()
     
     if algo == "DF":
-        predictions , t_unc, e_unc, a_unc, model = df.DF_run(x_train, x_test, y_train, y_test, prams, unc_method, seed, opt_decision_model=opt_decision_model)
+        predictions , t_unc, e_unc, a_unc, model = df.DF_run(x_train, x_test, y_train, y_test, prams, unc_method, seed, opt_decision_model=opt_decision_model, equal_model_prediction=prams["equal_model_prediction"])
         probs = model.predict_proba(x_test)
     elif algo == "NN":
         predictions , t_unc, e_unc, a_unc, model = nn.NN_run(x_train, x_test, y_train, y_test, prams, unc_method, seed, opt_decision_model=opt_decision_model)
@@ -119,12 +119,12 @@ if __name__ == '__main__':
     seed   = 1
     runs = 1
     data_name = "Jdata/parkinsons"
-    algo = "NN"
+    algo = "DF"
     unc_method = "set30"
     prams = {
     # 'criterion'          : "entropy",
     # 'max_features'       : "auto",
-    'max_depth'          : 100,
+    'max_depth'          : 10,
     'n_estimators'       : 10,
     'n_estimator_predict': 10,
     'opt_iterations'     : 2,
@@ -134,7 +134,8 @@ if __name__ == '__main__':
     'split'              : 0.3,
     'run_start'          : 0,
     'cv'                 : 0,
-    'opt_decision_model' : True
+    'opt_decision_model' : True,
+    'equal_model_prediction'   : False
     }
 
     base_dir = os.path.dirname(os.path.realpath(__file__))

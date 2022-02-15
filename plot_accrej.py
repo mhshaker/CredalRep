@@ -37,7 +37,7 @@ for data in data_list:
     
     # prameters ############################################################################################################################################
 
-    run_name    = "new_NN"
+    run_name    = "CredalRepPaperUAI100test"
     # run_name2   = "opt50_lessParam"
     plot_name   = f"{data}_{run_name}"
     query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND run_name='{run_name}'"

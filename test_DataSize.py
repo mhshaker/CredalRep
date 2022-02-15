@@ -11,10 +11,13 @@ import matplotlib.pyplot as plt
 
 ######################################################################### Prameters
 # unc_method = ["set18", "set19", "bays"]
-unc_method = ["bays", "bays2"]
-runs = 15
+# unc_method = ["set30","set31","bays"]
+unc_method = ["bays"]
+runs = 1
 n_class = 2
-data_size_list = np.arange(10, 150, 1)
+# data_size_list = np.arange(100, 50000, 5000)
+# data_size_list = [20000, 40000, 60000, 80000, 100000]
+data_size_list = np.geomspace(100, 50000, num=10, dtype=int)
 uncertaintymode_list = ["Total", "Epistemic", "Aleatoric"] 
 algo = "DF"
 prams = {
@@ -56,17 +59,17 @@ if __name__ == '__main__':
     for seed in range(0,runs):
 
         x, y = make_classification(
-                class_sep=0.7,
+                class_sep=3,
                 flip_y=0.3, 
-                n_samples=2000, 
-                n_features=40,
-                n_informative=20, 
+                n_samples=100000, 
+                n_features=10,
+                n_informative=5, 
                 n_redundant=0, 
                 n_repeated=0, 
                 n_classes=n_class, 
                 n_clusters_per_class=1, 
                 weights=None, 
-                hypercube=True, 
+                hypercube=True,
                 shift=0.0, 
                 scale=1.0, 
                 shuffle=True,
@@ -78,6 +81,8 @@ if __name__ == '__main__':
             for i, data_size in enumerate(data_size_list):
                 x_train_run = x_train[0:data_size]
                 y_train_run = y_train[0:data_size]
+                x_train_run, x_test, y_train_run, y_test = dp.split_data(x_train_run, y_train_run, split=prams["split"], seed=seed)
+
                 if plot_data:
                     plt.scatter(x_train_run[:,0], x_train_run[:,1], c= y_train_run, alpha=1)
                     plt.xlim(-10, 10)
@@ -86,7 +91,7 @@ if __name__ == '__main__':
                     plt.close()
 
                 ray_res.append(uncertainty_quantification.remote(seed, x_train_run, x_test, y_train_run, y_test, prams, unc, algo, prams["opt_decision_model"]))
-                print("runing")
+                # print("runing")
     for res in ray_res:
         all_res.append(ray.get(res))
 
@@ -109,4 +114,4 @@ if __name__ == '__main__':
             axs[mode_index].set_ylabel(ylabel)
     fig.legend(unc_method)
     fig.subplots_adjust(bottom=0.15)
-    fig.savefig(f"./pic/s_data/Data_size_test_{n_class}Class_M5_bays2.png")
+    fig.savefig(f"./pic/s_data/bays_test_flip03_sep3_geo_f10.png")
