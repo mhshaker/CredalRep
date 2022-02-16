@@ -22,11 +22,11 @@ single_plot = False
 legend_flag = False
 table_flag  = True
 
-# data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod", "bank", "QSAR", "spambase"] 
+data_list  = ["parkinsons","vertebral","breast","climate", "ionosphere", "blod", "bank", "QSAR", "spambase"] 
 # data_list  = ["vertebral","breast", "ionosphere", "blod", "QSAR", "wine_qw"] 
 # data_list = ["climate", "parkinsons", "spambase"]
 # data_list = ["climate", "vertebral"]
-data_list = ["parkinsons"]
+# data_list = ["parkinsons"]
 modes     = "eat"
 
 if table_flag:
@@ -39,7 +39,7 @@ for data in data_list:
 
     # prameters ############################################################################################################################################
 
-    run_name  = "CredalRepPaperUAI100test"  # last run name -> ROC_area 
+    run_name  = "CredalRepPaperUAI100"  # last run name -> ROC_area 
     plot_name = data + "_" + run_name
     # query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND status='done' AND (run_name='{run_name}' AND result_type='set18' OR run_name='unc_out2' AND result_type='out')"
     query       = f"SELECT results, id , prams, result_type FROM experiments Where task='unc' AND dataset='Jdata/{data}' AND run_name='{run_name}'"
